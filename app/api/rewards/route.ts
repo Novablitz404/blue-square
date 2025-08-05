@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
 
     // Check quest requirements
     if (reward.requirements.questIds.length > 0) {
-      const userCompletedQuests = userQuestData?.completedQuests || [];
+      const userCompletedQuests = userQuestData?.quests
+        ?.filter(quest => quest.isCompleted)
+        ?.map(quest => quest.questId) || [];
       const missingQuests = reward.requirements.questIds.filter(
         questId => !userCompletedQuests.includes(questId)
       );

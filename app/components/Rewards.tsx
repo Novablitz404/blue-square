@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { getAvailableRewardsForUser, recordUserReward, AvailableReward } from "../../lib/reward-service";
@@ -19,13 +19,7 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
 
   const [redeeming, setRedeeming] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (userAddress) {
-      loadRewards();
-    }
-  }, [userAddress]);
-
-  const loadRewards = async () => {
+  const loadRewards = useCallback(async () => {
     if (!userAddress) return;
     
     try {
@@ -42,7 +36,13 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [userAddress]);
+
+  useEffect(() => {
+    if (userAddress) {
+      loadRewards();
+    }
+  }, [loadRewards, userAddress]);
 
   const handleRedeem = async (reward: AvailableReward) => {
     if (!userAddress) {

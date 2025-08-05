@@ -70,6 +70,29 @@ export async function getActiveRewards(): Promise<Reward[]> {
   }
 }
 
+// Get a single reward by ID
+export async function getRewardById(id: string): Promise<Reward | null> {
+  try {
+    const rewardRef = doc(db, 'rewards', id);
+    const rewardDoc = await getDoc(rewardRef);
+    
+    if (rewardDoc.exists()) {
+      const data = rewardDoc.data();
+      return {
+        id: rewardDoc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      } as Reward;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching reward:', error);
+    return null;
+  }
+}
+
 // Get available rewards for a user with eligibility check
 export async function getAvailableRewardsForUser(userId: string): Promise<AvailableReward[]> {
   try {
