@@ -136,7 +136,7 @@ export default function App() {
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <header className="flex justify-between items-center mb-3 h-11">
           <div className="flex items-center space-x-2">
-            <Image src="/blue-square.png" alt="Blue Square" width={80} height={80} />
+            <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={80} height={80} />
           </div>
           <div className="flex items-center space-x-2">
             <Wallet className="z-10">
