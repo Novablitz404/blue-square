@@ -3,7 +3,6 @@
 import {
   useMiniKit,
   useAddFrame,
-  useOpenUrl,
   useNotification,
 } from "@coinbase/onchainkit/minikit";
 import {
@@ -37,7 +36,6 @@ export default function App() {
   const [notificationSent, setNotificationSent] = useState(false);
 
   const addFrame = useAddFrame();
-  const openUrl = useOpenUrl();
 
   const sendNotification = useNotification();
 
@@ -167,7 +165,7 @@ export default function App() {
             <Leaderboard activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
           <div className={activeTab === "rewards" ? "block" : "hidden"}>
-            <Rewards activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Rewards activeTab={activeTab} setActiveTab={setActiveTab} userAddress={address} />
           </div>
           <div className={activeTab === "quests" ? "block" : "hidden"}>
             <Quests activeTab={activeTab} setActiveTab={setActiveTab} />

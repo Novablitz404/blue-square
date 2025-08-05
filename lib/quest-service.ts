@@ -44,6 +44,17 @@ export interface UserQuest {
   lastUpdated: Date;
 }
 
+// Interface for Firebase UserQuest data with Timestamps
+interface FirebaseUserQuest {
+  userId: string;
+  questId: string;
+  progress: number;
+  isCompleted: boolean;
+  completedAt?: Timestamp;
+  startedAt: Timestamp;
+  lastUpdated: Timestamp;
+}
+
 export interface UserQuestData {
   userId: string;
   quests: UserQuest[];
@@ -88,7 +99,7 @@ export async function getUserQuestData(userId: string): Promise<UserQuestData | 
         totalQuestsCompleted: data.totalQuestsCompleted || 0,
         totalQuestPoints: data.totalQuestPoints || 0,
         lastUpdated: data.lastUpdated?.toDate() || new Date(),
-        quests: data.quests?.map((quest: any) => ({
+        quests: data.quests?.map((quest: FirebaseUserQuest) => ({
           ...quest,
           startedAt: quest.startedAt?.toDate() || new Date(),
           lastUpdated: quest.lastUpdated?.toDate() || new Date(),

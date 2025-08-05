@@ -42,20 +42,9 @@ interface UserQuest {
   lastUpdated: Date;
 }
 
-interface UserQuestData {
-  userId: string;
-  quests: UserQuest[];
-  dailyLoginStreak: number;
-  lastLoginDate: string;
-  totalQuestsCompleted: number;
-  totalQuestPoints: number;
-  lastUpdated: Date;
-}
-
 export function Quests({ activeTab, setActiveTab }: QuestProps) {
   const { address } = useAccount();
   const [quests, setQuests] = useState<{ quest: Quest; userQuest: UserQuest }[]>([]);
-  const [userQuestData, setUserQuestData] = useState<UserQuestData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadQuests = useCallback(async () => {
@@ -68,10 +57,9 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
       
       if (result.success) {
         setQuests(result.data.quests);
-        setUserQuestData(result.data.userQuestData);
         
-        // If this is a new user with no quest data, trigger early adopter quest check
-        if (!result.data.userQuestData) {
+        // If this is a new user with no quests, trigger early adopter quest check
+        if (result.data.quests.length === 0) {
           console.log('🆕 [QUESTS] New user detected, triggering early adopter quest check');
           fetch('/api/quests', {
             method: 'POST',
@@ -116,19 +104,6 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
       window.removeEventListener('refreshActivity', handleRefreshQuests);
     };
   }, [loadQuests]);
-
-  const getQuestIcon = (type: string) => {
-    switch (type) {
-      case 'streak_based':
-        return <Icon name="activity" size="md" className="text-blue-500" />;
-      case 'early_adopter':
-        return <Icon name="trophy" size="md" className="text-yellow-500" />;
-      case 'activity_based':
-        return <Icon name="transaction" size="md" className="text-green-500" />;
-      default:
-        return <Icon name="activity" size="md" className="text-gray-500" />;
-    }
-  };
 
   const getProgressPercentage = (userQuest: UserQuest, quest: Quest) => {
     if (userQuest.isCompleted) return 100;

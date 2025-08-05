@@ -26,10 +26,15 @@ A MiniKit-powered mini app that tracks on-chain activity and rewards users with 
 - Real-time rankings
 
 ### 🎁 Rewards Center
-- Redeem points for exclusive rewards
-- NFT badges and tokens
-- Trading fee discounts
-- VIP access passes
+- **Dynamic Rewards System**: Create and manage rewards through the quest-admin panel
+- **Quest-Based Eligibility**: Rewards can require completion of specific quests
+- **Level Requirements**: Set minimum level requirements for rewards
+- **Points Rewards**: Earn points for completing quests and activities
+- **NFT Badges & Tokens**: Exclusive digital collectibles
+- **Trading Fee Discounts**: Platform benefits
+- **VIP Access Passes**: Premium features and early access
+- **Redemption Tracking**: Prevents duplicate redemptions
+- **Limited Editions**: Set maximum redemption limits
 
 ### 🔔 Notifications
 - Get notified when you earn points
@@ -95,11 +100,14 @@ A MiniKit-powered mini app that tracks on-chain activity and rewards users with 
 ### Components
 - `ActivityTracker`: Main activity display and points tracking
 - `Leaderboard`: User rankings and competition
-- `Rewards`: Points redemption system
+- `Rewards`: Dynamic rewards system with eligibility checking
+- `Quests`: Quest completion tracking
 - `Button` & `Icon`: Reusable UI components
 
 ### API Routes
 - `/api/activity`: Handle activity tracking and points calculation
+- `/api/quests`: Quest completion and management
+- `/api/rewards`: Reward redemption and eligibility checking
 
 ### Data Flow
 1. User connects wallet

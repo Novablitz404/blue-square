@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 type IconProps = {
   name: "activity" | "points" | "trophy" | "medal-gold" | "medal-silver" | "medal-bronze" | "refresh" | "check" | "plus" | "arrow-right" | "arrow-left" | "arrow-inbound" | "arrow-outbound" | "wallet" | "transaction" | "nft" | "contract";
   size?: "sm" | "md" | "lg";
@@ -31,23 +33,29 @@ export function Icon({ name, size = "md", className = "" }: IconProps) {
       </svg>
     ),
     "medal-gold": (
-      <img 
+      <Image 
         src="/1st-prize.png" 
         alt="1st Prize" 
+        width={20}
+        height={20}
         className={`${sizeClasses[size]} ${className}`}
       />
     ),
     "medal-silver": (
-      <img 
+      <Image 
         src="/2nd-place.png" 
         alt="2nd Place" 
+        width={20}
+        height={20}
         className={`${sizeClasses[size]} ${className}`}
       />
     ),
     "medal-bronze": (
-      <img 
+      <Image 
         src="/3rd-place.png" 
         alt="3rd Place" 
+        width={20}
+        height={20}
         className={`${sizeClasses[size]} ${className}`}
       />
     ),
