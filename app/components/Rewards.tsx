@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { getAvailableRewardsForUser, recordUserReward, AvailableReward } from "../../lib/reward-service";
-import { getCombinedPoints } from "../../lib/firebase-service";
 
 interface RewardsProps {
   activeTab: string;
@@ -13,24 +12,18 @@ interface RewardsProps {
 }
 
 export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) {
-  const [userPoints, setUserPoints] = useState(0);
   const [rewards, setRewards] = useState<AvailableReward[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [redeeming, setRedeeming] = useState<string | null>(null);
+  const [rewardSubTab, setRewardSubTab] = useState<'unclaimed' | 'claimed'>('unclaimed');
 
   const loadRewards = useCallback(async () => {
     if (!userAddress) return;
     
     try {
       setLoading(true);
-      const [availableRewards, userPointsData] = await Promise.all([
-        getAvailableRewardsForUser(userAddress),
-        getCombinedPoints(userAddress)
-      ]);
-      
+      const availableRewards = await getAvailableRewardsForUser(userAddress);
       setRewards(availableRewards);
-      setUserPoints(userPointsData.totalPoints);
     } catch (error) {
       console.error('Error loading rewards:', error);
     } finally {
@@ -104,6 +97,15 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
     }
   };
 
+  // Filter rewards based on sub-tab
+  const filteredRewards = rewards.filter((reward) => {
+    if (rewardSubTab === 'claimed') {
+      return reward.isRedeemed;
+    } else {
+      return !reward.isRedeemed;
+    }
+  });
+
   return (
     <div className="flex flex-col h-screen">
       {/* Scrollable content area */}
@@ -112,32 +114,69 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Icon name="points" size="md" className="text-yellow-500" />
               <h2 className="text-lg font-semibold">Rewards Center</h2>
             </div>
           </div>
-          
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[var(--app-accent)]">{userPoints}</div>
-            <div className="text-sm text-[var(--app-foreground-muted)]">Your Points</div>
-          </div>
+
+          {/* Sub-tabs */}
+          {userAddress && rewards.length > 0 && (
+            <div className="flex space-x-2">
+              <Button
+                variant={rewardSubTab === 'unclaimed' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setRewardSubTab('unclaimed')}
+              >
+                Unclaimed ({rewards.filter(reward => !reward.isRedeemed).length})
+              </Button>
+              <Button
+                variant={rewardSubTab === 'claimed' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setRewardSubTab('claimed')}
+              >
+                Claimed ({rewards.filter(reward => reward.isRedeemed).length})
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Available Rewards */}
         <div className="space-y-3">
-          <h3 className="text-md font-semibold">Available Rewards</h3>
+          <h3 className="text-md font-semibold">
+            {rewardSubTab === 'claimed' ? 'Claimed Rewards' : 'Available Rewards'}
+          </h3>
           
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="text-sm text-[var(--app-foreground-muted)]">Loading rewards...</div>
+          {!userAddress ? (
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium mb-2">Connect Wallet</p>
+              <p className="text-sm">Connect your wallet to view your rewards</p>
+            </div>
+          ) : loading ? (
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--app-accent)] mx-auto mb-2"></div>
+              <p>Loading rewards...</p>
             </div>
           ) : rewards.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-sm text-[var(--app-foreground-muted)]">No rewards available</div>
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <p className="text-lg font-medium mb-2">No rewards available</p>
+              <p className="text-sm">Check back later for new rewards!</p>
+            </div>
+          ) : filteredRewards.length === 0 ? (
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium mb-2">
+                {rewardSubTab === 'claimed' ? 'No claimed rewards' : 'No unclaimed rewards'}
+              </p>
+              <p className="text-sm">
+                {rewardSubTab === 'claimed' 
+                  ? 'Claim some rewards to see them here!' 
+                  : 'All rewards have been claimed!'
+                }
+              </p>
             </div>
           ) : (
             <div className="grid gap-3">
-              {rewards.map((reward) => (
+              {filteredRewards.map((reward) => (
                 <div
                   key={reward.id}
                   className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border ${getRewardColor(reward.type)} hover:shadow-md transition-shadow ${

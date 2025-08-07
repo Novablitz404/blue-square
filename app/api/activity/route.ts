@@ -20,21 +20,21 @@ interface ActivityData {
 }
 
 interface PointsCalculation {
-  token_transfer: 10;
-  nft_transfer: 25;
-  contract_interaction: 15;
-  swap: 30;
-  stake: 20;
-  mint: 35;
+  token_transfer: 2;
+  nft_transfer: 2;
+  contract_interaction: 5;
+  swap: 8;
+  stake: 8;
+  mint: 8;
 }
 
 const POINTS_MAP: PointsCalculation = {
-  token_transfer: 10,
-  nft_transfer: 25,
-  contract_interaction: 15,
-  swap: 30,
-  stake: 20,
-  mint: 35,
+  token_transfer: 2,
+  nft_transfer: 2,
+  contract_interaction: 5,
+  swap: 8,
+  stake: 8,
+  mint: 8,
 };
 
 // Mock database for storing user activity and points - now using Firebase instead
@@ -377,11 +377,11 @@ export async function GET(request: NextRequest) {
 }
 
 function getLevelFromPoints(points: number): string {
-  if (points >= 1000) return 'Diamond';
-  if (points >= 500) return 'Platinum';
-  if (points >= 200) return 'Gold';
-  if (points >= 100) return 'Silver';
-  if (points >= 50) return 'Bronze';
+  if (points >= 1000) return 'Diamond Hands';
+  if (points >= 500) return 'Whale';
+  if (points >= 200) return 'DeFi Master';
+  if (points >= 100) return 'Crypto Native';
+  if (points >= 50) return 'HODLer';
   return 'Newbie';
 }
 

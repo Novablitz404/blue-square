@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isValidWalletAddress(address) {
+      return address is string && address.matches('^0x[a-fA-F0-9]{40}$');
+    }
+    
+    function isValidPoints(points) {
+      return points is number && points >= 0 && points <= 1000000;
+    }
+    
+    function isValidActivityType(type) {
+      return type in ['token_transfer', 'nft_transfer', 'contract_interaction', 'swap', 'stake', 'mint'];
+    }
+    
+    function isValidQuestType(type) {
+      return type in ['early_adopter', 'activity_based', 'streak_based'];
+    }
+    
+    function isValidRewardType(type) {
+      return type in ['points', 'nft', 'token', 'badge', 'discount'];
+    }
+    
+    // Users collection - User activity data
+    match /users/{userId} {
+      allow read: if true; // Public read access for leaderboard functionality
+      allow create: if isValidWalletAddress(userId);
+      allow update: if isValidWalletAddress(userId);
+      allow delete: if false; // Prevent deletion of user data
+    }
+    
+    // Activities collection - Individual activity records
+    match /activities/{activityId} {
+      allow read: if true; // Public read access for activities
+      allow create: if true;
+      allow update: if false; // Activities should be immutable once created
+      allow delete: if false; // Prevent deletion of activity records
+    }
+    
+    // Quests collection - Quest definitions
+    match /quests/{questId} {
+      allow read: if true; // Public read access for quests
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false; // Prevent deletion of quests
+    }
+    
+    // UserQuests collection - User quest progress
+    match /userQuests/{userId} {
+      allow read: if true; // Public read access for leaderboard functionality
+      allow create: if isValidWalletAddress(userId) && 
+                       request.resource.data.userId == userId;
+      allow update: if isValidWalletAddress(userId) && 
+                       request.resource.data.userId == userId;
+      allow delete: if false; // Prevent deletion of user quest data
+    }
+    
+    // Rewards collection - Reward definitions
+    match /rewards/{rewardId} {
+      allow read: if true; // Public read access for rewards
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false; // Prevent deletion of rewards
+    }
+    
+    // UserRewards collection - User reward redemptions
+    match /userRewards/{userRewardId} {
+      allow read: if resource.data.userId is string && isValidWalletAddress(resource.data.userId);
+      allow create: if request.resource.data.userId is string && 
+                       isValidWalletAddress(request.resource.data.userId);
+      allow update: if resource.data.userId is string && 
+                       isValidWalletAddress(resource.data.userId);
+      allow delete: if false; // Prevent deletion of reward redemptions
+    }
+    
+    // Leaderboard collection - Leaderboard entries
+    match /leaderboard/{entryId} {
+      allow read: if true; // Public read access for leaderboard
+      allow create: if request.resource.data.address is string && 
+                       isValidWalletAddress(request.resource.data.address);
+      allow update: if request.resource.data.address is string && 
+                       isValidWalletAddress(request.resource.data.address);
+      allow delete: if false; // Prevent deletion of leaderboard entries
+    }
+    
+    // Notifications collection - User notification preferences
+    match /notifications/{userId} {
+      allow read: if isValidWalletAddress(userId);
+      allow create: if isValidWalletAddress(userId) && 
+                       request.resource.data.userId == userId;
+      allow update: if isValidWalletAddress(userId) && 
+                       request.resource.data.userId == userId;
+      allow delete: if isValidWalletAddress(userId);
+    }
+    
+    // Admin collection - Admin-only data (requires Firebase Auth with admin claim)
+    match /admin/{document} {
+      allow read, write: if request.auth != null && 
+                           request.auth.token.admin == true;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

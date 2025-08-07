@@ -46,6 +46,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
   const { address } = useAccount();
   const [quests, setQuests] = useState<{ quest: Quest; userQuest: UserQuest }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [questSubTab, setQuestSubTab] = useState<'available' | 'completed'>('available');
 
   const loadQuests = useCallback(async () => {
     if (!address) return;
@@ -133,6 +134,15 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
     return { status: 'not-started', text: 'Not Started', color: 'text-gray-500' };
   };
 
+  // Filter quests based on sub-tab
+  const filteredQuests = quests.filter(({ userQuest }) => {
+    if (questSubTab === 'completed') {
+      return userQuest.isCompleted;
+    } else {
+      return !userQuest.isCompleted;
+    }
+  });
+
   return (
     <div className="flex flex-col h-screen">
       {/* Scrollable content area */}
@@ -143,28 +153,49 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
             <div className="flex items-center space-x-2">
               <h2 className="text-lg font-semibold">Quests</h2>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={loadQuests}
-                disabled={isLoading}
-                icon={<Icon name="refresh" size="sm" />}
-              >
-                {isLoading ? "Loading..." : "Refresh"}
-              </Button>
-            </div>
+            {address && (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={loadQuests}
+                  disabled={isLoading}
+                  icon={<Icon name="refresh" size="sm" />}
+                >
+                  {isLoading ? "Loading..." : "Refresh"}
+                </Button>
+              </div>
+            )}
           </div>
 
-
+          {/* Sub-tabs */}
+          {address && quests.length > 0 && (
+            <div className="flex space-x-2">
+              <Button
+                variant={questSubTab === 'available' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setQuestSubTab('available')}
+              >
+                Available ({quests.filter(({ userQuest }) => !userQuest.isCompleted).length})
+              </Button>
+              <Button
+                variant={questSubTab === 'completed' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setQuestSubTab('completed')}
+              >
+                Completed ({quests.filter(({ userQuest }) => userQuest.isCompleted).length})
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Quests List */}
         <div className="space-y-3">
           {!address ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <p className="text-lg font-medium mb-2">Connect your wallet</p>
-              <p className="text-sm">Connect your wallet to view your quests!</p>
+              <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium mb-2">Connect Wallet</p>
+              <p className="text-sm">Connect your wallet to view your quests</p>
             </div>
           ) : isLoading ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
@@ -173,12 +204,25 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
             </div>
           ) : quests.length === 0 ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="trophy" size="lg" className="mx-auto mb-3 text-[var(--app-foreground-muted)]" />
+              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
               <p className="text-lg font-medium mb-2">No quests available</p>
               <p className="text-sm">Check back later for new quests!</p>
             </div>
+          ) : filteredQuests.length === 0 ? (
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium mb-2">
+                {questSubTab === 'completed' ? 'No completed quests' : 'No available quests'}
+              </p>
+              <p className="text-sm">
+                {questSubTab === 'completed' 
+                  ? 'Complete some quests to see them here!' 
+                  : 'All quests have been completed!'
+                }
+              </p>
+            </div>
           ) : (
-            quests.map(({ quest, userQuest }) => {
+            filteredQuests.map(({ quest, userQuest }) => {
               const status = getQuestStatus(userQuest, quest);
               const progress = getProgressPercentage(userQuest, quest);
               
@@ -226,15 +270,9 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
                     {/* Rewards */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <Icon name="points" size="sm" className="text-yellow-500" />
                         <span className="text-sm font-semibold text-[var(--app-accent)]">
                           +{quest.rewards.points} points
                         </span>
-                        {quest.rewards.title && (
-                          <span className="text-xs bg-[var(--app-accent)] text-white px-2 py-1 rounded-full">
-                            {quest.rewards.title}
-                          </span>
-                        )}
                       </div>
                       
                       {userQuest.isCompleted && (

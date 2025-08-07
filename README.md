@@ -5,20 +5,20 @@ A MiniKit-powered mini app that tracks on-chain activity and rewards users with 
 ## Features
 
 ### 🎯 Activity Tracking
-- **Token Transfers**: Earn 10 points per transfer
-- **NFT Transfers**: Earn 25 points per transfer  
-- **Smart Contract Interactions**: Earn 15 points per interaction
-- **Token Swaps**: Earn 30 points per swap
-- **Staking Activities**: Earn 20 points per stake
-- **NFT Mints**: Earn 35 points per mint
+- **Token Transfers**: Earn 2 points per transfer
+- **NFT Transfers**: Earn 2 points per transfer  
+- **Smart Contract Interactions**: Earn 5 points per interaction
+- **Token Swaps**: Earn 8 points per swap
+- **Staking Activities**: Earn 8 points per stake
+- **NFT Mints**: Earn 8 points per mint
 
 ### 🏆 Points & Levels System
 - **Newbie**: 0-49 points
-- **Bronze**: 50-99 points
-- **Silver**: 100-199 points
-- **Gold**: 200-499 points
-- **Platinum**: 500-999 points
-- **Diamond**: 1000+ points
+- **HODLer**: 50-99 points
+- **Crypto Native**: 100-199 points
+- **DeFi Master**: 200-499 points
+- **Whale**: 500-999 points
+- **Diamond Hands**: 1000+ points
 
 ### 🏅 Leaderboard
 - View top users by on-chain points

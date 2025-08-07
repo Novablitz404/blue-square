@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useAccount } from "wagmi";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 
@@ -19,14 +20,14 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
+  const { address } = useAccount();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("week");
 
   const loadLeaderboard = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/leaderboard?timeframe=${timeframe}`);
+      const response = await fetch(`/api/leaderboard?timeframe=all`);
       const result = await response.json();
       
       if (result.success) {
@@ -41,7 +42,7 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [timeframe]);
+  }, []);
 
   useEffect(() => {
     loadLeaderboard();
@@ -67,15 +68,15 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case "Diamond":
+      case "Diamond Hands":
         return "text-purple-500";
-      case "Platinum":
+      case "Whale":
         return "text-blue-500";
-      case "Gold":
+      case "DeFi Master":
         return "text-yellow-500";
-      case "Silver":
+      case "Crypto Native":
         return "text-gray-400";
-      case "Bronze":
+      case "HODLer":
         return "text-orange-500";
       default:
         return "text-green-500";
@@ -92,35 +93,29 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
             <div className="flex items-center space-x-2">
               <h2 className="text-lg font-semibold">Leaderboard</h2>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={loadLeaderboard}
-              disabled={isLoading}
-              icon={<Icon name="refresh" size="sm" />}
-            >
-              {isLoading ? "Loading..." : "Refresh"}
-            </Button>
-          </div>
-
-          {/* Timeframe Filter */}
-          <div className="flex space-x-2">
-            {(["week", "month", "all"] as const).map((period) => (
+            {address && (
               <Button
-                key={period}
-                variant={timeframe === period ? "primary" : "outline"}
+                variant="ghost"
                 size="sm"
-                onClick={() => setTimeframe(period)}
+                onClick={loadLeaderboard}
+                disabled={isLoading}
+                icon={<Icon name="refresh" size="sm" />}
               >
-                {period.charAt(0).toUpperCase() + period.slice(1)}
+                {isLoading ? "Loading..." : "Refresh"}
               </Button>
-            ))}
+            )}
           </div>
         </div>
 
         {/* Leaderboard List */}
         <div className="space-y-2">
-          {isLoading ? (
+          {!address ? (
+            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+              <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
+              <p className="text-lg font-medium mb-2">Connect Wallet</p>
+              <p className="text-sm">Connect your wallet to view the leaderboard</p>
+            </div>
+          ) : isLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, index) => (
                 <div

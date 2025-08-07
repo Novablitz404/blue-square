@@ -25,8 +25,6 @@ export interface Quest {
   };
   rewards: {
     points: number;
-    title?: string;
-    badge?: string;
   };
   isActive: boolean;
   startDate: Date;
@@ -315,11 +313,11 @@ export async function checkAndUpdateQuestProgress(userId: string, questId: strin
           
           // Calculate new level based on combined points
           let newLevel = 'Newbie';
-          if (combinedPoints >= 1000) newLevel = 'Diamond';
-          else if (combinedPoints >= 500) newLevel = 'Platinum';
-          else if (combinedPoints >= 200) newLevel = 'Gold';
-          else if (combinedPoints >= 100) newLevel = 'Silver';
-          else if (combinedPoints >= 50) newLevel = 'Bronze';
+                if (combinedPoints >= 1000) newLevel = 'Diamond Hands';
+      else if (combinedPoints >= 500) newLevel = 'Whale';
+      else if (combinedPoints >= 200) newLevel = 'DeFi Master';
+      else if (combinedPoints >= 100) newLevel = 'Crypto Native';
+      else if (combinedPoints >= 50) newLevel = 'HODLer';
           
           await updateDoc(userActivityRef, {
             level: newLevel,

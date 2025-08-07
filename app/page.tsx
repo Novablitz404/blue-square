@@ -18,20 +18,22 @@ import {
   WalletDropdown,
   WalletDropdownDisconnect,
 } from "@coinbase/onchainkit/wallet";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
 import { Button } from "./components/Button";
-import { Icon } from "./components/Icon";
 import { ActivityTracker } from "./components/ActivityTracker";
 import { Leaderboard } from "./components/Leaderboard";
 import { Rewards } from "./components/Rewards";
 import { Quests } from "./components/Quests";
+import { SaveFrameModal } from "./components/SaveFrameModal";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const { address } = useAccount();
   const [frameAdded, setFrameAdded] = useState(false);
+  const [showSaveFrameModal, setShowSaveFrameModal] = useState(false);
+  const [isSavingFrame, setIsSavingFrame] = useState(false);
   const [activeTab, setActiveTab] = useState("activity");
   const [notificationSent, setNotificationSent] = useState(false);
 
@@ -84,12 +86,34 @@ export default function App() {
     }
   }, [address]);
 
+  // Show save frame modal when app loads and frame hasn't been saved
+  useEffect(() => {
+    if (context && !context.client.added && !frameAdded) {
+      // Small delay to ensure the app is fully loaded
+      const timer = setTimeout(() => {
+        setShowSaveFrameModal(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [context, frameAdded]);
+
   const handleAddFrame = useCallback(async () => {
-    const frameAdded = await addFrame();
-    setFrameAdded(Boolean(frameAdded));
+    setIsSavingFrame(true);
+    try {
+      const frameAdded = await addFrame();
+      setFrameAdded(Boolean(frameAdded));
+      setShowSaveFrameModal(false);
+    } catch (error) {
+      console.error('Error saving frame:', error);
+    } finally {
+      setIsSavingFrame(false);
+    }
   }, [addFrame]);
 
-
+  const handleCancelSaveFrame = useCallback(() => {
+    setShowSaveFrameModal(false);
+  }, []);
 
   const handleSendNotification = async () => {
     try {
@@ -104,56 +128,30 @@ export default function App() {
     }
   };
 
-  const saveFrameButton = useMemo(() => {
-    if (context && !context.client.added) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddFrame}
-          className="text-[var(--app-accent)] p-4"
-          icon={<Icon name="plus" size="sm" />}
-        >
-          Save Frame
-        </Button>
-      );
-    }
-
-    if (frameAdded) {
-      return (
-        <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-          <Icon name="check" size="sm" className="text-[#0052FF]" />
-          <span>Saved</span>
-        </div>
-      );
-    }
-
-    return null;
-  }, [context, frameAdded, handleAddFrame]);
-
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <header className="flex justify-between items-center mb-3 h-11">
           <div className="flex items-center space-x-2">
-            <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={80} height={80} />
+            <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={80} height={80} priority />
           </div>
           <div className="flex items-center space-x-2">
-            <Wallet className="z-10">
-              <ConnectWallet>
-                <Name className="text-inherit" />
-              </ConnectWallet>
-              <WalletDropdown>
-                <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                  <Avatar />
-                  <Name />
-                  <Address />
-                  <EthBalance />
-                </Identity>
-                <WalletDropdownDisconnect />
-              </WalletDropdown>
-            </Wallet>
-            {saveFrameButton}
+            <div className="scale-75 origin-right">
+              <Wallet className="z-10">
+                <ConnectWallet>
+                  <Name className="text-inherit" />
+                </ConnectWallet>
+                <WalletDropdown>
+                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                    <Avatar />
+                    <Name />
+                    <Address />
+                    <EthBalance />
+                  </Identity>
+                  <WalletDropdownDisconnect />
+                </WalletDropdown>
+              </Wallet>
+            </div>
           </div>
         </header>
 
@@ -172,7 +170,7 @@ export default function App() {
           </div>
         </main>
 
-        {/* Notification Button */}
+        {/* Test Notification Button */}
         {context?.client.added && (
           <div className="mt-4 flex justify-center">
             <Button
@@ -187,6 +185,13 @@ export default function App() {
           </div>
         )}
 
+        {/* Save Frame Modal */}
+        <SaveFrameModal
+          isOpen={showSaveFrameModal}
+          onSave={handleAddFrame}
+          onCancel={handleCancelSaveFrame}
+          isSaving={isSavingFrame}
+        />
 
       </div>
     </div>

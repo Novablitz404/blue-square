@@ -6,7 +6,6 @@ import {
   updateDoc, 
   collection, 
   query, 
-  orderBy, 
   limit, 
   getDocs,
   Timestamp 
@@ -149,11 +148,11 @@ export async function addUserActivity(address: string, activity: Activity) {
       
       // Update level based on combined points
       let level = 'Newbie';
-      if (combinedPoints >= 1000) level = 'Diamond';
-      else if (combinedPoints >= 500) level = 'Platinum';
-      else if (combinedPoints >= 200) level = 'Gold';
-      else if (combinedPoints >= 100) level = 'Silver';
-      else if (combinedPoints >= 50) level = 'Bronze';
+      if (combinedPoints >= 1000) level = 'Diamond Hands';
+      else if (combinedPoints >= 500) level = 'Whale';
+      else if (combinedPoints >= 200) level = 'DeFi Master';
+      else if (combinedPoints >= 100) level = 'Crypto Native';
+      else if (combinedPoints >= 50) level = 'HODLer';
       
       await updateDoc(userRef, {
         activities,
@@ -185,7 +184,8 @@ export async function addUserActivity(address: string, activity: Activity) {
 export async function getLeaderboard(limitCount: number = 10): Promise<LeaderboardEntry[]> {
   try {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('totalPoints', 'desc'), limit(limitCount));
+    // Remove the orderBy clause to get all users, then sort in memory
+    const q = query(usersRef, limit(limitCount * 2)); // Get more users to account for filtering
     const querySnapshot = await getDocs(q);
     
     const leaderboard: LeaderboardEntry[] = [];
@@ -194,7 +194,7 @@ export async function getLeaderboard(limitCount: number = 10): Promise<Leaderboa
     for (let i = 0; i < querySnapshot.docs.length; i++) {
       const doc = querySnapshot.docs[i];
       const data = doc.data();
-      const address = data.address;
+      const address = doc.id; // Use document ID as address
       
       // Get quest points for this user
       const questData = await getUserQuestData(address);
@@ -204,33 +204,37 @@ export async function getLeaderboard(limitCount: number = 10): Promise<Leaderboa
       const activityPoints = data.totalPoints || 0;
       const combinedPoints = activityPoints + questPoints;
       
-      // Calculate level based on combined points
-      let level = 'Newbie';
-      if (combinedPoints >= 1000) level = 'Diamond';
-      else if (combinedPoints >= 500) level = 'Platinum';
-      else if (combinedPoints >= 200) level = 'Gold';
-      else if (combinedPoints >= 100) level = 'Silver';
-      else if (combinedPoints >= 50) level = 'Bronze';
-      
-      leaderboard.push({
-        rank: i + 1,
-        address: address,
-        points: combinedPoints,
-        level: level,
-        activities: data.activities?.length || 0,
-        lastActivity: data.lastUpdated?.toDate() || new Date(),
-      });
+      // Only include users with some activity or quest points
+      if (combinedPoints > 0) {
+        // Calculate level based on combined points
+        let level = 'Newbie';
+        if (combinedPoints >= 1000) level = 'Diamond Hands';
+        else if (combinedPoints >= 500) level = 'Whale';
+        else if (combinedPoints >= 200) level = 'DeFi Master';
+        else if (combinedPoints >= 100) level = 'Crypto Native';
+        else if (combinedPoints >= 50) level = 'HODLer';
+        
+        leaderboard.push({
+          rank: 0, // Will be set after sorting
+          address: address,
+          points: combinedPoints,
+          level: level,
+          activities: data.activities?.length || 0,
+          lastActivity: data.lastUpdated?.toDate() || new Date(),
+        });
+      }
     }
     
     // Sort by combined points (descending)
     leaderboard.sort((a, b) => b.points - a.points);
     
-    // Update ranks after sorting
-    leaderboard.forEach((entry, index) => {
-      entry.rank = index + 1;
-    });
+    // Update ranks after sorting and limit results
+    const limitedLeaderboard = leaderboard.slice(0, limitCount).map((entry, index) => ({
+      ...entry,
+      rank: index + 1
+    }));
     
-    return leaderboard;
+    return limitedLeaderboard;
   } catch (error) {
     console.error('Error getting leaderboard:', error);
     return [];
@@ -253,11 +257,11 @@ export async function getCombinedPoints(address: string): Promise<{ activityPoin
     
     // Calculate level based on combined points
     let level = 'Newbie';
-    if (totalPoints >= 1000) level = 'Diamond';
-    else if (totalPoints >= 500) level = 'Platinum';
-    else if (totalPoints >= 200) level = 'Gold';
-    else if (totalPoints >= 100) level = 'Silver';
-    else if (totalPoints >= 50) level = 'Bronze';
+    if (totalPoints >= 1000) level = 'Diamond Hands';
+    else if (totalPoints >= 500) level = 'Whale';
+    else if (totalPoints >= 200) level = 'DeFi Master';
+    else if (totalPoints >= 100) level = 'Crypto Native';
+    else if (totalPoints >= 50) level = 'HODLer';
     
     return {
       activityPoints,

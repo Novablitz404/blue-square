@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 type IconProps = {
-  name: "activity" | "points" | "trophy" | "medal-gold" | "medal-silver" | "medal-bronze" | "refresh" | "check" | "plus" | "arrow-right" | "arrow-left" | "arrow-inbound" | "arrow-outbound" | "wallet" | "transaction" | "nft" | "contract";
+  name: "activity" | "points" | "trophy" | "medal-gold" | "medal-silver" | "medal-bronze" | "refresh" | "check" | "plus" | "arrow-inbound" | "arrow-outbound" | "wallet" | "transaction" | "nft" | "contract";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -72,16 +72,6 @@ export function Icon({ name, size = "md", className = "" }: IconProps) {
     plus: (
       <svg className={`${sizeClasses[size]} ${className}`} fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-      </svg>
-    ),
-    "arrow-right": (
-      <svg className={`${sizeClasses[size]} ${className}`} fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-      </svg>
-    ),
-    "arrow-left": (
-      <svg className={`${sizeClasses[size]} ${className}`} fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
       </svg>
     ),
     "arrow-inbound": (
