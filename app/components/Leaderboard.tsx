@@ -163,7 +163,7 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
           </div>
 
           {/* Scrollable Leaderboard List */}
-          <div className="h-64 overflow-y-auto space-y-2 pr-2">
+          <div className="h-130 overflow-y-auto space-y-2 scrollbar-hide">
             {!address ? (
               <div className="text-center py-8 text-[var(--app-foreground-muted)]">
                 <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
@@ -197,7 +197,7 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                {leaderboard.slice(0, 6).map((entry) => (
+                {leaderboard.map((entry) => (
                   <div
                     key={`${entry.rank}-${entry.address}`}
                     className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-3 border border-[var(--app-card-border)] hover:shadow-md transition-shadow ${

@@ -272,7 +272,7 @@ export function ActivityTracker({ activeTab, setActiveTab }: ActivityTrackerProp
               </div>
 
               {/* Scrollable Activity List */}
-              <div className="h-64 overflow-y-auto space-y-2 pr-2">
+              <div className="h-94 overflow-y-auto space-y-2 scrollbar-hide">
                 {isLoading ? (
                   <div className="space-y-2">
                     {[...Array(6)].map((_, index) => (
@@ -306,7 +306,7 @@ export function ActivityTracker({ activeTab, setActiveTab }: ActivityTrackerProp
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {activities.slice(0, 6).map((activity) => (
+                    {activities.map((activity) => (
                       <div
                         key={`${activity.hash}-${activity.direction}-${activity.tokenId || 'no-token-id'}`}
                         className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-3 border border-[var(--app-card-border)] hover:shadow-md transition-shadow"

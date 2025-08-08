@@ -241,7 +241,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
         {/* Quests List */}
         <div className="space-y-3">
           {/* Scrollable Quests List */}
-          <div className="h-64 overflow-y-auto space-y-3 pr-2">
+          <div className="h-65 overflow-y-auto space-y-3 scrollbar-hide">
             {!address ? (
               <div className="text-center py-8 text-[var(--app-foreground-muted)]">
                 <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
@@ -313,7 +313,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredQuests.slice(0, 6).map(({ quest, userQuest }) => {
+                {filteredQuests.map(({ quest, userQuest }) => {
                   const status = getQuestStatus(userQuest, quest);
                   const progress = getProgressPercentage(userQuest, quest);
                   

@@ -191,7 +191,7 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
           </h3>
           
           {/* Scrollable Rewards List */}
-          <div className="h-64 overflow-y-auto space-y-3 pr-2">
+          <div className="h-94 overflow-y-auto space-y-3 scrollbar-hide">
             {!userAddress ? (
               <div className="text-center py-8 text-[var(--app-foreground-muted)]">
                 <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
@@ -253,7 +253,7 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredRewards.slice(0, 6).map((reward) => (
+                {filteredRewards.map((reward) => (
                   <div
                     key={reward.id}
                     className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border ${getRewardColor(reward.type)} hover:shadow-md transition-shadow ${
