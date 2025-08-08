@@ -181,7 +181,7 @@ export default function App() {
 
   // Show save frame modal when app loads and frame hasn't been saved
   useEffect(() => {
-    if (context && !context.client.added && !frameAdded) {
+    if (context && !context.client.added && !frameAdded && isFrameReady) {
       // Small delay to ensure the app is fully loaded
       const timer = setTimeout(() => {
         setShowSaveFrameModal(true);
@@ -189,7 +189,7 @@ export default function App() {
       
       return () => clearTimeout(timer);
     }
-  }, [context, frameAdded]);
+  }, [context, frameAdded, isFrameReady]);
 
   // Check if notification details become available after frame is added
   useEffect(() => {
@@ -200,6 +200,33 @@ export default function App() {
   }, [context?.client.added, address, frameAdded, context]);
 
   const handleAddFrame = useCallback(async () => {
+    console.log('🔍 [FRAME] handleAddFrame called');
+    console.log('🔍 [FRAME] Current state:', { address, context: !!context, clientAdded: context?.client.added, isFrameReady });
+    
+    if (!address) {
+      console.error('❌ [FRAME] No wallet address found');
+      alert('Please connect your wallet first');
+      return;
+    }
+    
+    if (!context) {
+      console.error('❌ [FRAME] MiniKit context not available');
+      alert('MiniKit is not ready. Please wait a moment and try again.');
+      return;
+    }
+    
+    if (!isFrameReady) {
+      console.error('❌ [FRAME] Frame not ready');
+      alert('Frame is not ready. Please wait a moment and try again.');
+      return;
+    }
+    
+    if (!addFrame) {
+      console.error('❌ [FRAME] addFrame function not available');
+      alert('Add frame function not available. Please refresh the page and try again.');
+      return;
+    }
+    
     setIsSavingFrame(true);
     try {
       console.log('🔍 [FRAME] Attempting to add frame...');
@@ -364,10 +391,11 @@ export default function App() {
       }
     } catch (error) {
       console.error('❌ [FRAME] Error saving frame:', error);
+      alert('Failed to save frame. Please try again.');
     } finally {
       setIsSavingFrame(false);
     }
-  }, [addFrame, address, context?.client]);
+  }, [addFrame, address, isFrameReady, context]);
 
   const handleCancelSaveFrame = useCallback(() => {
     setShowSaveFrameModal(false);
