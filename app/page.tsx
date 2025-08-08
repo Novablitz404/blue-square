@@ -221,7 +221,7 @@ export default function App() {
       return;
     }
     
-    if (!addFrame) {
+    if (typeof addFrame !== 'function') {
       console.error('❌ [FRAME] addFrame function not available');
       alert('Add frame function not available. Please refresh the page and try again.');
       return;
@@ -233,7 +233,7 @@ export default function App() {
       const result = await addFrame();
       console.log('🔍 [FRAME] Frame result:', result);
       
-      if (result && address) {
+      if (result) {
         console.log('🔍 [FRAME] Frame added successfully!');
         console.log('🔍 [FRAME] URL:', result.url);
         console.log('🔍 [FRAME] Token:', result.token);
@@ -262,17 +262,19 @@ export default function App() {
         
         setFrameAdded(true);
         setShowSaveFrameModal(false);
-      } else if (address) {
-        // If result is null but we have an address, the frame might have been added
-        // but the notification details aren't available yet
-        console.log('⚠️ [FRAME] Frame result is null, but frame might have been added. Will try to store notification details later.');
+      } else {
+        console.log('⚠️ [FRAME] Frame result is null - frame might have been added but notification details not available');
+        
+        // The frame was added but notification details aren't available yet
+        // This can happen in some cases where the frame is added but the notification details
+        // are provided through events or context updates later
         
         // Set up a listener for frame events to capture notification details when they become available
         const handleFrameEvent = (event: MessageEvent) => {
           console.log('🔍 [FRAME] Frame event received:', event);
           if (event.data && typeof event.data === 'object' && 'event' in event.data) {
             const frameEvent = event.data as { event: string; notificationDetails?: { token: string; url: string } };
-            if (frameEvent.event === 'frame_added' && frameEvent.notificationDetails && address) {
+            if (frameEvent.event === 'miniapp_added' && frameEvent.notificationDetails && address) {
               console.log('🔍 [FRAME] Found notification details in frame event:', frameEvent.notificationDetails);
               
               // Store notification details
@@ -339,55 +341,12 @@ export default function App() {
               }
             } else {
               console.log('⚠️ [FRAME] Still no notification details found in context after delay');
-              
-              // Try to get notification details from the MiniKit context
-              // This might be available through a different property or method
-              if (context.client && typeof context.client === 'object') {
-                const clientKeys = Object.keys(context.client);
-                console.log('🔍 [FRAME] Available client keys after delay:', clientKeys);
-                
-                // Check if there are any properties that might contain notification details
-                for (const key of clientKeys) {
-                  const value = (context.client as Record<string, unknown>)[key];
-                  if (value && typeof value === 'object' && (value as { token?: string; url?: string }).token || (value as { token?: string; url?: string }).url) {
-                    console.log('🔍 [FRAME] Found potential notification details in:', key, value);
-                    
-                    // Store notification details if found
-                    const notificationValue = value as { token?: string; url?: string };
-                    if (notificationValue.token && notificationValue.url) {
-                      fetch('/api/notification', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          userId: address,
-                          token: notificationValue.token,
-                          url: notificationValue.url
-                        })
-                      })
-                      .then(response => response.json())
-                      .then(result => {
-                        if (result.success) {
-                          console.log('✅ [NOTIFICATION] Stored notification details from alternative source after delay for user:', address);
-                        } else {
-                          console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source after delay:', result.error);
-                        }
-                      })
-                      .catch(error => {
-                        console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source after delay:', error);
-                      });
-                      break;
-                    }
-                  }
-                }
-              }
             }
           }
         }, 3000); // Wait 3 seconds for the context to update
         
         setFrameAdded(true);
         setShowSaveFrameModal(false);
-      } else {
-        console.log('⚠️ [FRAME] Frame result is null or no address:', { result, address });
       }
     } catch (error) {
       console.error('❌ [FRAME] Error saving frame:', error);
