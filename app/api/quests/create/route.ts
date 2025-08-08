@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
-import { sendNewQuestNotification } from '@/lib/notification-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +13,7 @@ export async function POST(request: NextRequest) {
       rewards, 
       isActive = true,
       startDate,
-      endDate,
-      sendNotification = true 
+      endDate
     } = body;
 
     // Validate required fields
@@ -54,16 +52,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`Created new quest: ${title} (ID: ${questRef.id})`);
 
-    // Send notification if requested
-    if (sendNotification && isActive) {
-      try {
-        await sendNewQuestNotification(questData);
-        console.log(`Sent new quest notification for: ${title}`);
-      } catch (notificationError) {
-        console.error('Failed to send new quest notification:', notificationError);
-        // Don't fail the quest creation if notification fails
-      }
-    }
+    // Emit a custom event for new quest creation (for client-side notification)
+    // This will be handled by the client-side notification system
+    console.log(`🎯 [QUEST] New quest created: ${title} (ID: ${questRef.id})`);
 
     return NextResponse.json({
       success: true,

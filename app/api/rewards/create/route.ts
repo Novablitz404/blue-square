@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
-import { sendNewRewardNotification } from '@/lib/notification-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +12,7 @@ export async function POST(request: NextRequest) {
       pointsReward, 
       requirements, 
       isActive = true,
-      maxRedemptions,
-      sendNotification = true 
+      maxRedemptions
     } = body;
 
     // Validate required fields
@@ -62,16 +60,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`Created new reward: ${name} (ID: ${rewardRef.id})`);
 
-    // Send notification if requested
-    if (sendNotification && isActive) {
-      try {
-        await sendNewRewardNotification(rewardData);
-        console.log(`Sent new reward notification for: ${name}`);
-      } catch (notificationError) {
-        console.error('Failed to send new reward notification:', notificationError);
-        // Don't fail the reward creation if notification fails
-      }
-    }
+    // Emit a custom event for new reward creation (for client-side notification)
+    // This will be handled by the client-side notification system
+    console.log(`🎁 [REWARD] New reward created: ${name} (ID: ${rewardRef.id})`);
 
     return NextResponse.json({
       success: true,

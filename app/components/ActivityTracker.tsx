@@ -127,8 +127,57 @@ export function ActivityTracker({ activeTab, setActiveTab }: ActivityTrackerProp
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Navigation Bar - Moved to top */}
+      <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
+        <div className="flex items-center justify-around py-3 px-4">
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "activity" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Activity
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "leaderboard" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Leaderboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("rewards")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "rewards" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Rewards
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("quests")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "quests" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Quests
+          </button>
+        </div>
+      </div>
+
       {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4 mb-20">
+      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
         {/* Header with Points and Level */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -297,55 +346,6 @@ export function ActivityTracker({ activeTab, setActiveTab }: ActivityTrackerProp
               )}
             </>
           )}
-        </div>
-      </div>
-
-      {/* Navigation Bar - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-card-bg)] backdrop-blur-md border-t border-[var(--app-card-border)] z-10">
-        <div className="flex items-center justify-around py-3 px-4">
-          <button
-            onClick={() => setActiveTab("activity")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "activity" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Activity
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "leaderboard" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Leaderboard
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("rewards")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "rewards" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Rewards
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("quests")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "quests" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Quests
-          </button>
         </div>
       </div>
     </div>

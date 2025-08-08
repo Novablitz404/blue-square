@@ -41,6 +41,82 @@ export default function App() {
 
   const sendNotification = useNotification();
 
+  // Function to send notifications for new quests and rewards
+  const sendNewQuestNotification = useCallback(async (questTitle: string) => {
+    if (!context?.client.added) {
+      console.log('❌ [NOTIFICATION] Frame not added, skipping quest notification');
+      return;
+    }
+
+    try {
+      console.log('🔔 [NOTIFICATION] Sending new quest notification:', questTitle);
+      await sendNotification({
+        title: 'New Quest Available! 🎯',
+        body: `A new quest "${questTitle}" has been added. Check it out!`
+      });
+      console.log('✅ [NOTIFICATION] New quest notification sent successfully');
+    } catch (error) {
+      console.error('❌ [NOTIFICATION] Failed to send new quest notification:', error);
+    }
+  }, [sendNotification, context?.client.added]);
+
+  const sendNewRewardNotification = useCallback(async (rewardName: string) => {
+    if (!context?.client.added) {
+      console.log('❌ [NOTIFICATION] Frame not added, skipping reward notification');
+      return;
+    }
+
+    try {
+      console.log('🔔 [NOTIFICATION] Sending new reward notification:', rewardName);
+      await sendNotification({
+        title: 'New Reward Available! 🎁',
+        body: `A new reward "${rewardName}" has been added. Claim it now!`
+      });
+      console.log('✅ [NOTIFICATION] New reward notification sent successfully');
+    } catch (error) {
+      console.error('❌ [NOTIFICATION] Failed to send new reward notification:', error);
+    }
+  }, [sendNotification, context?.client.added]);
+
+  // Check for new quests and rewards periodically
+  useEffect(() => {
+    if (!address || !context?.client.added) return;
+
+    const checkForNewContent = async () => {
+      try {
+        // Check for new quests
+        const questsResponse = await fetch(`/api/quests?userId=${address}&checkNew=true`);
+        const questsData = await questsResponse.json();
+        
+        if (questsData.success && questsData.newQuests?.length > 0) {
+          for (const quest of questsData.newQuests) {
+            await sendNewQuestNotification(quest.title);
+          }
+        }
+
+        // Check for new rewards
+        const rewardsResponse = await fetch(`/api/rewards?userId=${address}&checkNew=true`);
+        const rewardsData = await rewardsResponse.json();
+        
+        if (rewardsData.success && rewardsData.newRewards?.length > 0) {
+          for (const reward of rewardsData.newRewards) {
+            await sendNewRewardNotification(reward.name);
+          }
+        }
+      } catch (error) {
+        console.error('❌ [NOTIFICATION] Error checking for new content:', error);
+      }
+    };
+
+    // Check immediately when component mounts
+    checkForNewContent();
+
+    // Set up periodic checking (every 2 minutes)
+    const interval = setInterval(checkForNewContent, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [address, context?.client.added, sendNewQuestNotification, sendNewRewardNotification]);
+
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
@@ -117,26 +193,54 @@ export default function App() {
 
   const handleSendNotification = async () => {
     try {
-      await sendNotification({
+      // Check if the frame is added and user has notification permissions
+      if (!context?.client.added) {
+        console.error('❌ [NOTIFICATION] Frame not added yet');
+        alert('Please add the frame to your mini apps first to enable notifications');
+        return;
+      }
+
+      console.log('🔔 [NOTIFICATION] Attempting to send notification');
+      console.log('🔔 [NOTIFICATION] Context details:', {
+        clientAdded: context.client.added,
+        hasContext: !!context
+      });
+      
+      const result = await sendNotification({
         title: 'New On-chain Points! 🎉',
         body: 'You earned points for your recent on-chain activity!'
       });
+      
+      console.log('✅ [NOTIFICATION] Notification sent successfully:', result);
       setNotificationSent(true);
       setTimeout(() => setNotificationSent(false), 30000);
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      console.error('❌ [NOTIFICATION] Failed to send notification:', error);
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('notifications')) {
+          alert('Notifications are not enabled. Please enable notifications for this mini app.');
+        } else if (error.message.includes('frame')) {
+          alert('Frame not found. Please add the frame to your mini apps first.');
+        } else {
+          alert(`Failed to send notification: ${error.message}`);
+        }
+      } else {
+        alert('Failed to send notification. Please try again.');
+      }
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
-        <header className="flex justify-between items-center mb-3 h-11">
+        <header className="flex justify-between items-center mb-3 h-16">
           <div className="flex items-center space-x-2">
-            <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={80} height={80} priority />
+            <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={120} height={120} priority />
           </div>
           <div className="flex items-center space-x-2">
-            <div className="scale-75 origin-right">
+            <div className="scale-100 origin-right">
               <Wallet className="z-10">
                 <ConnectWallet>
                   <Name className="text-inherit" />

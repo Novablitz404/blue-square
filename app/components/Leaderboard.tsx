@@ -85,8 +85,57 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Navigation Bar - Moved to top */}
+      <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
+        <div className="flex items-center justify-around py-3 px-4">
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "activity" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Activity
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "leaderboard" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Leaderboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("rewards")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "rewards" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Rewards
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("quests")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "quests" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Quests
+          </button>
+        </div>
+      </div>
+
       {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4 mb-20">
+      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
         {/* Header */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -108,7 +157,11 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
         </div>
 
         {/* Leaderboard List */}
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-md font-semibold">Top Performers</h3>
+          </div>
+
           {!address ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
               <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
@@ -117,28 +170,20 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
             </div>
           ) : isLoading ? (
             <div className="space-y-2">
-              {[...Array(5)].map((_, index) => (
+              {[...Array(6)].map((_, index) => (
                 <div
                   key={index}
                   className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-3 border border-[var(--app-card-border)] animate-pulse"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="flex items-center justify-center w-16 h-16">
-                        <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                      </div>
+                      <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
                       <div className="flex-1 min-w-0 space-y-2">
-                        <div className="h-4 bg-gray-300 rounded w-24"></div>
-                        <div className="flex items-center space-x-2">
-                          <div className="h-3 bg-gray-300 rounded w-16"></div>
-                          <div className="w-1 h-3 bg-gray-300 rounded"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
-                        </div>
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-12 h-4 bg-gray-300 rounded"></div>
-                    </div>
+                    <div className="w-12 h-4 bg-gray-300 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -183,55 +228,6 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
               </div>
             ))
           )}
-        </div>
-      </div>
-
-      {/* Navigation Bar - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-card-bg)] backdrop-blur-md border-t border-[var(--app-card-border)] z-10">
-        <div className="flex items-center justify-around py-3 px-4">
-          <button
-            onClick={() => setActiveTab("activity")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "activity" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Activity
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "leaderboard" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Leaderboard
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("rewards")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "rewards" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Rewards
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("quests")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "quests" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Quests
-          </button>
         </div>
       </div>
     </div>

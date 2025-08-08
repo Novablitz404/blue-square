@@ -108,31 +108,45 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+  const checkNew = searchParams.get('checkNew') === 'true';
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID parameter is required' }, { status: 400 });
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing userId parameter' },
-        { status: 400 }
-      );
-    }
-
-    // Get user's available rewards
+    // Get available rewards for the user
     const { getAvailableRewardsForUser } = await import('../../../lib/reward-service');
-    const availableRewards = await getAvailableRewardsForUser(userId);
-
+    const rewards = await getAvailableRewardsForUser(userId);
+    
+    // If checking for new content, filter for rewards created in the last 24 hours
+    let newRewards: Array<{id: string; name: string; description: string; type: string}> = [];
+    if (checkNew) {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      newRewards = rewards.filter(reward => {
+        const rewardCreatedAt = reward.createdAt instanceof Date 
+          ? reward.createdAt 
+          : new Date(reward.createdAt);
+        return rewardCreatedAt > twentyFourHoursAgo && reward.isActive && !reward.isRedeemed;
+      }).map(reward => ({
+        id: reward.id,
+        name: reward.name,
+        description: reward.description,
+        type: reward.type
+      }));
+    }
+    
     return NextResponse.json({
       success: true,
-      rewards: availableRewards
+      data: {
+        rewards
+      },
+      ...(checkNew && { newRewards })
     });
-
   } catch (error) {
-    console.error('Error getting user rewards:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Error fetching rewards:', error);
+    return NextResponse.json({ error: 'Failed to fetch rewards' }, { status: 500 });
   }
 } 

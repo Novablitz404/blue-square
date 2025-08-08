@@ -108,8 +108,57 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Navigation Bar - Moved to top */}
+      <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
+        <div className="flex items-center justify-around py-3 px-4">
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "activity" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Activity
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "leaderboard" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Leaderboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("rewards")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "rewards" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Rewards
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("quests")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "quests" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Quests
+          </button>
+        </div>
+      </div>
+
       {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4 mb-20">
+      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
         {/* Header with User Points */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -152,9 +201,39 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
               <p className="text-sm">Connect your wallet to view your rewards</p>
             </div>
           ) : loading ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--app-accent)] mx-auto mb-2"></div>
-              <p>Loading rewards...</p>
+            <div className="grid gap-3">
+              {[...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3 flex-1">
+                      <div className="mt-0.5">
+                        <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className="h-4 bg-gray-300 rounded w-32"></div>
+                          <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                        </div>
+                        <div className="h-3 bg-gray-300 rounded w-full mb-2"></div>
+                        
+                        {/* Requirements */}
+                        <div className="space-y-1">
+                          <div className="h-3 bg-gray-300 rounded w-24"></div>
+                          <div className="h-3 bg-gray-300 rounded w-28"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end space-y-2">
+                      <div className="w-16 h-6 bg-gray-300 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : rewards.length === 0 ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
@@ -198,42 +277,35 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
                               Redeemed
                             </span>
                           )}
-                          {!reward.isEligible && !reward.isRedeemed && (
-                            <span className="text-xs bg-yellow-500 text-white px-2 py-1 rounded-full">
-                              Locked
-                            </span>
-                          )}
                         </div>
                         <p className="text-xs text-[var(--app-foreground-muted)] mb-2">
                           {reward.description}
                         </p>
-                        <div className="flex items-center space-x-1 text-sm font-semibold text-[var(--app-accent)]">
-                          <Icon name="points" size="sm" />
-                          <span>{reward.pointsReward} points</span>
-                        </div>
                         
                         {/* Requirements */}
-                        {reward.requirements.questIds.length > 0 && (
-                          <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
-                            <span className="font-medium">Required Quests:</span> {reward.requirements.questIds.length}
-                          </div>
-                        )}
-                        {reward.requirements.requiredLevel > 0 && (
-                          <div className="mt-1 text-xs text-[var(--app-foreground-muted)]">
-                            <span className="font-medium">Required Level:</span> {reward.requirements.requiredLevel}
-                          </div>
-                        )}
-                        
-                        {/* Missing Requirements */}
-                        {reward.missingRequirements.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {reward.missingRequirements.map((req, index) => (
-                              <div key={index} className="text-xs text-red-500">
-                                • {req}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <div className="space-y-1">
+                          {reward.requirements.questIds.length > 0 && (
+                            <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
+                              <span className="font-medium">Required Quests:</span> {reward.requirements.questIds.length}
+                            </div>
+                          )}
+                          {reward.requirements.requiredLevel > 0 && (
+                            <div className="mt-1 text-xs text-[var(--app-foreground-muted)]">
+                              <span className="font-medium">Required Level:</span> {reward.requirements.requiredLevel}
+                            </div>
+                          )}
+                          
+                          {/* Missing Requirements */}
+                          {reward.missingRequirements.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {reward.missingRequirements.map((req, index) => (
+                                <div key={index} className="text-xs text-red-500">
+                                  • {req}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -259,55 +331,6 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
               ))}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Navigation Bar - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-card-bg)] backdrop-blur-md border-t border-[var(--app-card-border)] z-10">
-        <div className="flex items-center justify-around py-3 px-4">
-          <button
-            onClick={() => setActiveTab("activity")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "activity" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Activity
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "leaderboard" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Leaderboard
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("rewards")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "rewards" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Rewards
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("quests")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "quests" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Quests
-          </button>
         </div>
       </div>
     </div>

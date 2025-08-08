@@ -145,8 +145,57 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Navigation Bar - Moved to top */}
+      <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
+        <div className="flex items-center justify-around py-3 px-4">
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "activity" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Activity
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "leaderboard" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Leaderboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("rewards")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "rewards" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Rewards
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("quests")}
+            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+              activeTab === "quests" 
+                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
+                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] hover:bg-[var(--app-accent)]/5"
+            }`}
+          >
+            Quests
+          </button>
+        </div>
+      </div>
+
       {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4 mb-20">
+      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
         {/* Header */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -198,9 +247,48 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
               <p className="text-sm">Connect your wallet to view your quests</p>
             </div>
           ) : isLoading ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--app-accent)] mx-auto mb-2"></div>
-              <p>Loading quests...</p>
+            <div className="space-y-3">
+              {[...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="h-5 bg-gray-300 rounded w-3/4 mb-2"></div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                        <div className="w-20 h-4 bg-gray-300 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-right">
+                        <div className="w-12 h-5 bg-gray-300 rounded"></div>
+                        <div className="w-8 h-3 bg-gray-300 rounded mt-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="h-3 bg-gray-300 rounded w-full mb-3"></div>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-3">
+                    <div className="flex justify-between mb-1">
+                      <div className="w-16 h-3 bg-gray-300 rounded"></div>
+                      <div className="w-8 h-3 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="w-full bg-gray-300 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-gray-400 w-1/3"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="w-20 h-4 bg-gray-300 rounded"></div>
+                    <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : quests.length === 0 ? (
             <div className="text-center py-8 text-[var(--app-foreground-muted)]">
@@ -228,114 +316,82 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
               
               return (
                 <div
-                  key={quest.id}
-                  className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] hover:shadow-md transition-shadow ${
-                    userQuest.isCompleted ? "ring-2 ring-green-500/20" : ""
-                  }`}
+                  key={`${quest.id}-${userQuest.userId}`}
+                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] hover:shadow-md transition-shadow"
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-[var(--app-foreground)]">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-[var(--app-foreground)] mb-1">
                         {quest.title}
                       </h3>
-                      <span className={`text-xs font-medium ${status.color}`}>
-                        {status.text}
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs font-medium ${status.color}`}>
+                          {status.text}
+                        </span>
+                        {quest.rewards.title && (
+                          <>
+                            <span className="text-xs text-[var(--app-foreground-muted)]">•</span>
+                            <span className="text-xs text-[var(--app-foreground-muted)]">
+                              {quest.rewards.title}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-[var(--app-accent)]">
+                          +{quest.rewards.points}
+                        </div>
+                        <div className="text-xs text-[var(--app-foreground-muted)]">points</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-[var(--app-foreground-muted)] mb-3">
+                    {quest.description}
+                  </p>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs text-[var(--app-foreground-muted)] mb-1">
+                      <span>Progress</span>
+                      <span>{Math.round(progress)}%</span>
+                    </div>
+                    <div className="w-full bg-[var(--app-card-border)] rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          userQuest.isCompleted 
+                            ? 'bg-green-500' 
+                            : progress > 0 
+                              ? 'bg-blue-500' 
+                              : 'bg-gray-300'
+                        }`}
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Rewards */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-semibold text-[var(--app-accent)]">
+                        +{quest.rewards.points} points
                       </span>
                     </div>
                     
-                    <p className="text-xs text-[var(--app-foreground-muted)] mb-3">
-                      {quest.description}
-                    </p>
-                    
-                    {/* Progress Bar */}
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs text-[var(--app-foreground-muted)] mb-1">
-                        <span>Progress</span>
-                        <span>{Math.round(progress)}%</span>
+                    {userQuest.isCompleted && (
+                      <div className="flex items-center space-x-1 text-green-500">
+                        <Icon name="check" size="sm" />
+                        <span className="text-xs font-medium">Completed</span>
                       </div>
-                      <div className="w-full bg-[var(--app-card-border)] rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            userQuest.isCompleted 
-                              ? 'bg-green-500' 
-                              : progress > 0 
-                                ? 'bg-blue-500' 
-                                : 'bg-gray-300'
-                          }`}
-                          style={{ width: `${progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    {/* Rewards */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-semibold text-[var(--app-accent)]">
-                          +{quest.rewards.points} points
-                        </span>
-                      </div>
-                      
-                      {userQuest.isCompleted && (
-                        <div className="flex items-center space-x-1 text-green-500">
-                          <Icon name="check" size="sm" />
-                          <span className="text-xs font-medium">Completed</span>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               );
             })
           )}
-        </div>
-      </div>
-
-      {/* Navigation Bar - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-card-bg)] backdrop-blur-md border-t border-[var(--app-card-border)] z-10">
-        <div className="flex items-center justify-around py-3 px-4">
-          <button
-            onClick={() => setActiveTab("activity")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "activity" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Activity
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "leaderboard" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Leaderboard
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("rewards")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "rewards" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Rewards
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("quests")}
-            className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-              activeTab === "quests" 
-                ? "text-[var(--app-accent)] bg-[var(--app-accent)]/10" 
-                : "text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)]"
-            }`}
-          >
-            Quests
-          </button>
         </div>
       </div>
     </div>
