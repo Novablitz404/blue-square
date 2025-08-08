@@ -27,7 +27,7 @@ export async function GET() {
       description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
       screenshotUrls: [],
       iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-      splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
+      splashImageUrl: "https://basequest.fun/BaseQuestLogo-Blue.png",
       splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
       homeUrl: process.env.NEXT_PUBLIC_URL,
       primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
