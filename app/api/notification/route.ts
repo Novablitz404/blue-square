@@ -72,7 +72,10 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { userId, token, url, fid } = body;
 
+    console.log('🔍 [NOTIFICATION] Received PUT request:', { userId, token: token ? '***' : 'missing', url, fid });
+
     if (!userId || !token || !url) {
+      console.log('❌ [NOTIFICATION] Missing required fields:', { userId: !!userId, token: !!token, url: !!url });
       return NextResponse.json(
         { error: 'Missing required fields: userId, token, url' },
         { status: 400 }
@@ -92,6 +95,47 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Failed to store notification details:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+} 
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID parameter is required' },
+        { status: 400 }
+      );
+    }
+
+    const notificationDetails = await NotificationService.getNotificationDetails(userId);
+    
+    if (notificationDetails) {
+      return NextResponse.json({
+        success: true,
+        message: 'Notification details found',
+        details: {
+          userId,
+          hasToken: !!notificationDetails.token,
+          hasUrl: !!notificationDetails.url,
+          addedAt: notificationDetails.addedAt
+        }
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: 'No notification details found for this user'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error getting notification details:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

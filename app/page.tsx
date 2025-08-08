@@ -193,14 +193,58 @@ export default function App() {
     }
   }, [context, frameAdded]);
 
+  // Check if notification details become available after frame is added
+  useEffect(() => {
+    if (context?.client.added && address && !frameAdded) {
+      console.log('🔍 [FRAME] Frame is added, checking for notification details...');
+      console.log('🔍 [FRAME] Context details:', context);
+      
+      // Try to get notification details from context
+      const clientContext = context.client as { notificationDetails?: { token: string; url: string } };
+      if (clientContext?.notificationDetails) {
+        const notificationDetails = clientContext.notificationDetails;
+        console.log('🔍 [FRAME] Found notification details in context:', notificationDetails);
+        
+        // Store notification details
+        fetch('/api/notification', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: address,
+            token: notificationDetails.token,
+            url: notificationDetails.url
+          })
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            console.log('✅ [NOTIFICATION] Stored notification details from context for user:', address);
+          } else {
+            console.error('❌ [NOTIFICATION] Failed to store notification details from context:', result.error);
+          }
+        })
+        .catch(error => {
+          console.error('❌ [NOTIFICATION] Failed to store notification details from context:', error);
+        });
+      }
+    }
+  }, [context?.client.added, address, frameAdded, context]);
+
   const handleAddFrame = useCallback(async () => {
     setIsSavingFrame(true);
     try {
+      console.log('🔍 [FRAME] Attempting to add frame...');
       const frameResult = await addFrame();
+      console.log('🔍 [FRAME] Frame result:', frameResult);
+      
       if (frameResult && address) {
-        // Store notification details in Redis
+        console.log('🔍 [FRAME] Frame added successfully, storing notification details...');
+        console.log('🔍 [FRAME] Token:', frameResult.token);
+        console.log('🔍 [FRAME] URL:', frameResult.url);
+        
+        // Store notification details in Firebase
         try {
-          await fetch('/api/notification', {
+          const response = await fetch('/api/notification', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -209,16 +253,30 @@ export default function App() {
               url: frameResult.url
             })
           });
-          console.log('✅ [NOTIFICATION] Stored notification details for user:', address);
+          
+          const result = await response.json();
+          if (result.success) {
+            console.log('✅ [NOTIFICATION] Stored notification details for user:', address);
+          } else {
+            console.error('❌ [NOTIFICATION] Failed to store notification details:', result.error);
+          }
         } catch (error) {
           console.error('❌ [NOTIFICATION] Failed to store notification details:', error);
         }
         
         setFrameAdded(true);
         setShowSaveFrameModal(false);
+      } else if (address) {
+        // If frameResult is null but we have an address, the frame might have been added
+        // but the notification details aren't available yet. We'll try to store them later.
+        console.log('⚠️ [FRAME] Frame result is null, but frame might have been added. Will try to store notification details later.');
+        setFrameAdded(true);
+        setShowSaveFrameModal(false);
+      } else {
+        console.log('⚠️ [FRAME] Frame result is null or no address:', { frameResult, address });
       }
     } catch (error) {
-      console.error('Error saving frame:', error);
+      console.error('❌ [FRAME] Error saving frame:', error);
     } finally {
       setIsSavingFrame(false);
     }
@@ -308,7 +366,7 @@ export default function App() {
 
         {/* Test Notification Button */}
         {context?.client.added && (
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex flex-col gap-2 items-center">
             <Button
               variant="outline"
               size="sm"
@@ -317,6 +375,25 @@ export default function App() {
               className="text-xs"
             >
               {notificationSent ? "Notification Sent!" : "Send Test Notification"}
+            </Button>
+            
+            {/* Debug button to check notification details */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (address) {
+                  const response = await fetch(`/api/notification?userId=${address}`, {
+                    method: 'GET'
+                  });
+                  const result = await response.json();
+                  console.log('🔍 [DEBUG] Notification details for user:', result);
+                  alert(result.success ? 'Notification details found!' : 'No notification details found');
+                }
+              }}
+              className="text-xs"
+            >
+              Debug Notification Details
             </Button>
           </div>
         )}
