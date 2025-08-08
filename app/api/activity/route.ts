@@ -308,6 +308,8 @@ export async function GET(request: NextRequest) {
         const questPoints = questData?.totalQuestPoints || 0;
         const combinedPoints = totalPoints + questPoints;
         
+        console.log(`User ${address} - Activity points: ${totalPoints}, Quest points: ${questPoints}, Combined: ${combinedPoints}`);
+        
         // Save to Firebase with combined points
         await saveUserActivity(address, {
           address,
@@ -347,6 +349,34 @@ export async function GET(request: NextRequest) {
     
     // Calculate level based on combined points
     const combinedLevel = getLevelFromPoints(combinedPoints);
+    
+    // If user has quest points but no activity data, create minimal user data
+    if (!userData && questPoints > 0) {
+      console.log(`User ${address} has quest points (${questPoints}) but no activity data, creating minimal user data`);
+      
+      // Save minimal user data to Firebase with quest points
+      await saveUserActivity(address, {
+        address,
+        activities: [],
+        totalPoints: 0,
+        combinedPoints: questPoints,
+        level: getLevelFromPoints(questPoints),
+        lastUpdated: new Date(),
+        lastScannedBlock: undefined,
+        isInitialScanComplete: true,
+      });
+
+      userData = {
+        address,
+        activities: [],
+        totalPoints: 0,
+        combinedPoints: questPoints,
+        level: getLevelFromPoints(questPoints),
+        lastUpdated: new Date(),
+        lastScannedBlock: undefined,
+        isInitialScanComplete: true,
+      };
+    }
     
     // Filter activities based on direction
     let filteredActivities = userData?.activities || [];
