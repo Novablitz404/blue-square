@@ -20,7 +20,6 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
-import { Button } from "./components/Button";
 import { ActivityTracker } from "./components/ActivityTracker";
 import { Leaderboard } from "./components/Leaderboard";
 import { Rewards } from "./components/Rewards";
@@ -34,7 +33,6 @@ export default function App() {
   const [showSaveFrameModal, setShowSaveFrameModal] = useState(false);
   const [isSavingFrame, setIsSavingFrame] = useState(false);
   const [activeTab, setActiveTab] = useState("activity");
-  const [notificationSent, setNotificationSent] = useState(false);
 
   const addFrame = useAddFrame();
 
@@ -241,6 +239,124 @@ export default function App() {
         // If result is null but we have an address, the frame might have been added
         // but the notification details aren't available yet
         console.log('⚠️ [FRAME] Frame result is null, but frame might have been added. Will try to store notification details later.');
+        
+        // Set up a listener for frame events to capture notification details when they become available
+        const handleFrameEvent = (event: MessageEvent) => {
+          console.log('🔍 [FRAME] Frame event received:', event);
+          if (event.data && typeof event.data === 'object' && 'event' in event.data) {
+            const frameEvent = event.data as { event: string; notificationDetails?: { token: string; url: string } };
+            if (frameEvent.event === 'frame_added' && frameEvent.notificationDetails && address) {
+              console.log('🔍 [FRAME] Found notification details in frame event:', frameEvent.notificationDetails);
+              
+              // Store notification details
+              fetch('/api/notification', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: address,
+                  token: frameEvent.notificationDetails.token,
+                  url: frameEvent.notificationDetails.url
+                })
+              })
+              .then(response => response.json())
+              .then(result => {
+                if (result.success) {
+                  console.log('✅ [NOTIFICATION] Stored notification details from frame event for user:', address);
+                } else {
+                  console.error('❌ [NOTIFICATION] Failed to store notification details from frame event:', result.error);
+                }
+              })
+              .catch(error => {
+                console.error('❌ [NOTIFICATION] Failed to store notification details from frame event:', error);
+              });
+              
+              // Remove the event listener
+              window.removeEventListener('message', handleFrameEvent);
+            }
+          }
+        };
+        
+        // Listen for frame events
+        window.addEventListener('message', handleFrameEvent);
+        
+        // Also try to get notification details from context after a delay
+        setTimeout(async () => {
+          if (context?.client.added) {
+            console.log('🔍 [FRAME] Checking for notification details after delay...');
+            // Try to get notification details from the context
+            const clientContext = context.client as { notificationDetails?: { token: string; url: string } };
+            if (clientContext?.notificationDetails) {
+              const notificationDetails = clientContext.notificationDetails;
+              console.log('🔍 [FRAME] Found notification details in context after delay:', notificationDetails);
+              
+              // Store notification details
+              try {
+                const response = await fetch('/api/notification', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: address,
+                    token: notificationDetails.token,
+                    url: notificationDetails.url
+                  })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                  console.log('✅ [NOTIFICATION] Stored notification details from context after delay for user:', address);
+                } else {
+                  console.error('❌ [NOTIFICATION] Failed to store notification details from context after delay:', result.error);
+                }
+              } catch (error) {
+                console.error('❌ [NOTIFICATION] Failed to store notification details from context after delay:', error);
+              }
+            } else {
+              console.log('⚠️ [FRAME] Still no notification details found in context after delay');
+              
+              // Try to get notification details from the MiniKit context
+              // This might be available through a different property or method
+              if (context.client && typeof context.client === 'object') {
+                const clientKeys = Object.keys(context.client);
+                console.log('🔍 [FRAME] Available client keys after delay:', clientKeys);
+                
+                // Check if there are any properties that might contain notification details
+                for (const key of clientKeys) {
+                  const value = (context.client as Record<string, unknown>)[key];
+                  if (value && typeof value === 'object' && (value as { token?: string; url?: string }).token || (value as { token?: string; url?: string }).url) {
+                    console.log('🔍 [FRAME] Found potential notification details in:', key, value);
+                    
+                    // Store notification details if found
+                    const notificationValue = value as { token?: string; url?: string };
+                    if (notificationValue.token && notificationValue.url) {
+                      fetch('/api/notification', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          userId: address,
+                          token: notificationValue.token,
+                          url: notificationValue.url
+                        })
+                      })
+                      .then(response => response.json())
+                      .then(result => {
+                        if (result.success) {
+                          console.log('✅ [NOTIFICATION] Stored notification details from alternative source after delay for user:', address);
+                        } else {
+                          console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source after delay:', result.error);
+                        }
+                      })
+                      .catch(error => {
+                        console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source after delay:', error);
+                      });
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 3000); // Wait 3 seconds for the context to update
+        
         setFrameAdded(true);
         setShowSaveFrameModal(false);
       } else {
@@ -251,47 +367,11 @@ export default function App() {
     } finally {
       setIsSavingFrame(false);
     }
-  }, [addFrame, address]);
+  }, [addFrame, address, context?.client]);
 
   const handleCancelSaveFrame = useCallback(() => {
     setShowSaveFrameModal(false);
   }, []);
-
-  const handleSendNotification = async () => {
-    try {
-      // Check if the frame is added and user has notification permissions
-      if (!context?.client.added || !address) {
-        console.error('❌ [NOTIFICATION] Frame not added or no address');
-        alert('Please add the frame to your mini apps first to enable notifications');
-        return;
-      }
-
-      console.log('🔔 [NOTIFICATION] Attempting to send notification');
-      
-      const response = await fetch('/api/notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'Test Notification! 🎉',
-          body: 'This is a test notification from Base Quest!',
-          userId: address
-        })
-      });
-      
-      const result = await response.json();
-      if (result.success) {
-        console.log('✅ [NOTIFICATION] Notification sent successfully:', result);
-        setNotificationSent(true);
-        setTimeout(() => setNotificationSent(false), 30000);
-      } else {
-        console.log('⚠️ [NOTIFICATION] Notification skipped:', result.message);
-        alert(result.message || 'Failed to send notification');
-      }
-    } catch (error) {
-      console.error('❌ [NOTIFICATION] Failed to send notification:', error);
-      alert('Failed to send notification. Please try again.');
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
@@ -334,40 +414,6 @@ export default function App() {
             <Quests activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
         </main>
-
-        {/* Test Notification Button */}
-        {context?.client.added && (
-          <div className="mt-4 flex flex-col gap-2 items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendNotification}
-              disabled={notificationSent}
-              className="text-xs"
-            >
-              {notificationSent ? "Notification Sent!" : "Send Test Notification"}
-            </Button>
-            
-            {/* Debug button to check notification details */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (address) {
-                  const response = await fetch(`/api/notification?userId=${address}`, {
-                    method: 'GET'
-                  });
-                  const result = await response.json();
-                  console.log('🔍 [DEBUG] Notification details for user:', result);
-                  alert(result.success ? 'Notification details found!' : 'No notification details found');
-                }
-              }}
-              className="text-xs"
-            >
-              Debug Notification Details
-            </Button>
-          </div>
-        )}
 
         {/* Save Frame Modal */}
         <SaveFrameModal
