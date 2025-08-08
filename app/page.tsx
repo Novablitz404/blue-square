@@ -196,100 +196,8 @@ export default function App() {
   // Check if notification details become available after frame is added
   useEffect(() => {
     if (context?.client.added && address && !frameAdded) {
-      console.log('🔍 [FRAME] Frame is added, checking for notification details...');
+      console.log('🔍 [FRAME] Frame is added, but notification details should be handled in handleAddFrame');
       console.log('🔍 [FRAME] Context details:', context);
-      
-      // Try to get notification details from context
-      const clientContext = context.client as { notificationDetails?: { token: string; url: string } };
-      if (clientContext?.notificationDetails) {
-        const notificationDetails = clientContext.notificationDetails;
-        console.log('🔍 [FRAME] Found notification details in context:', notificationDetails);
-        
-        // Store notification details
-        fetch('/api/notification', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: address,
-            token: notificationDetails.token,
-            url: notificationDetails.url
-          })
-        })
-        .then(response => response.json())
-        .then(result => {
-          if (result.success) {
-            console.log('✅ [NOTIFICATION] Stored notification details from context for user:', address);
-          } else {
-            console.error('❌ [NOTIFICATION] Failed to store notification details from context:', result.error);
-          }
-        })
-        .catch(error => {
-          console.error('❌ [NOTIFICATION] Failed to store notification details from context:', error);
-        });
-      } else {
-        console.log('⚠️ [FRAME] No notification details found in context, trying alternative approach...');
-        
-        // Try to get notification details from the MiniKit context
-        // This might be available through a different property or method
-        if (context.client && typeof context.client === 'object') {
-          const clientKeys = Object.keys(context.client);
-          console.log('🔍 [FRAME] Available client keys:', clientKeys);
-          
-          // Check if there are any properties that might contain notification details
-          for (const key of clientKeys) {
-            const value = (context.client as Record<string, unknown>)[key];
-            if (value && typeof value === 'object' && (value as { token?: string; url?: string }).token || (value as { token?: string; url?: string }).url) {
-              console.log('🔍 [FRAME] Found potential notification details in:', key, value);
-              
-              // Store notification details if found
-              const notificationValue = value as { token?: string; url?: string };
-              if (notificationValue.token && notificationValue.url) {
-                fetch('/api/notification', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    userId: address,
-                    token: notificationValue.token,
-                    url: notificationValue.url
-                  })
-                })
-                .then(response => response.json())
-                .then(result => {
-                  if (result.success) {
-                    console.log('✅ [NOTIFICATION] Stored notification details from alternative source for user:', address);
-                  } else {
-                    console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source:', result.error);
-                  }
-                })
-                .catch(error => {
-                  console.error('❌ [NOTIFICATION] Failed to store notification details from alternative source:', error);
-                });
-                break;
-              }
-            }
-          }
-        }
-        
-        // If still no notification details found, try to get them from the MiniKit context
-        // This might be available through a different approach
-        if (context.client && typeof context.client === 'object') {
-          // Check if there's a way to get notification details from the MiniKit context
-          // This might be available through a different property or method
-          const clientContext = context.client as Record<string, unknown>;
-          
-          // Try to get notification details from the MiniKit context
-          // This might be available through a different property or method
-          if (clientContext.notificationDetails) {
-            console.log('🔍 [FRAME] Found notification details in clientContext.notificationDetails:', clientContext.notificationDetails);
-          } else if (clientContext.notifications) {
-            console.log('🔍 [FRAME] Found notifications in clientContext.notifications:', clientContext.notifications);
-          } else if (clientContext.token) {
-            console.log('🔍 [FRAME] Found token in clientContext.token:', clientContext.token);
-          } else if (clientContext.url) {
-            console.log('🔍 [FRAME] Found url in clientContext.url:', clientContext.url);
-          }
-        }
-      }
     }
   }, [context?.client.added, address, frameAdded, context]);
 
@@ -297,13 +205,13 @@ export default function App() {
     setIsSavingFrame(true);
     try {
       console.log('🔍 [FRAME] Attempting to add frame...');
-      const frameResult = await addFrame();
-      console.log('🔍 [FRAME] Frame result:', frameResult);
+      const result = await addFrame();
+      console.log('🔍 [FRAME] Frame result:', result);
       
-      if (frameResult && address) {
-        console.log('🔍 [FRAME] Frame added successfully, storing notification details...');
-        console.log('🔍 [FRAME] Token:', frameResult.token);
-        console.log('🔍 [FRAME] URL:', frameResult.url);
+      if (result && address) {
+        console.log('🔍 [FRAME] Frame added successfully!');
+        console.log('🔍 [FRAME] URL:', result.url);
+        console.log('🔍 [FRAME] Token:', result.token);
         
         // Store notification details in Firebase
         try {
@@ -312,16 +220,16 @@ export default function App() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: address,
-              token: frameResult.token,
-              url: frameResult.url
+              token: result.token,
+              url: result.url
             })
           });
           
-          const result = await response.json();
-          if (result.success) {
+          const responseResult = await response.json();
+          if (responseResult.success) {
             console.log('✅ [NOTIFICATION] Stored notification details for user:', address);
           } else {
-            console.error('❌ [NOTIFICATION] Failed to store notification details:', result.error);
+            console.error('❌ [NOTIFICATION] Failed to store notification details:', responseResult.error);
           }
         } catch (error) {
           console.error('❌ [NOTIFICATION] Failed to store notification details:', error);
@@ -330,58 +238,20 @@ export default function App() {
         setFrameAdded(true);
         setShowSaveFrameModal(false);
       } else if (address) {
-        // If frameResult is null but we have an address, the frame might have been added
-        // but the notification details aren't available yet. We'll try to store them later.
+        // If result is null but we have an address, the frame might have been added
+        // but the notification details aren't available yet
         console.log('⚠️ [FRAME] Frame result is null, but frame might have been added. Will try to store notification details later.');
-        
-        // Try to get notification details from the context after a short delay
-        setTimeout(async () => {
-          if (context?.client.added) {
-            console.log('🔍 [FRAME] Checking for notification details after delay...');
-            // Try to get notification details from the context
-            const clientContext = context.client as { notificationDetails?: { token: string; url: string } };
-            if (clientContext?.notificationDetails) {
-              const notificationDetails = clientContext.notificationDetails;
-              console.log('🔍 [FRAME] Found notification details in context after delay:', notificationDetails);
-              
-              // Store notification details
-              try {
-                const response = await fetch('/api/notification', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    userId: address,
-                    token: notificationDetails.token,
-                    url: notificationDetails.url
-                  })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                  console.log('✅ [NOTIFICATION] Stored notification details from context after delay for user:', address);
-                } else {
-                  console.error('❌ [NOTIFICATION] Failed to store notification details from context after delay:', result.error);
-                }
-              } catch (error) {
-                console.error('❌ [NOTIFICATION] Failed to store notification details from context after delay:', error);
-              }
-            } else {
-              console.log('⚠️ [FRAME] Still no notification details found in context after delay');
-            }
-          }
-        }, 2000); // Wait 2 seconds for the context to update
-        
         setFrameAdded(true);
         setShowSaveFrameModal(false);
       } else {
-        console.log('⚠️ [FRAME] Frame result is null or no address:', { frameResult, address });
+        console.log('⚠️ [FRAME] Frame result is null or no address:', { result, address });
       }
     } catch (error) {
       console.error('❌ [FRAME] Error saving frame:', error);
     } finally {
       setIsSavingFrame(false);
     }
-  }, [addFrame, address, context?.client]);
+  }, [addFrame, address]);
 
   const handleCancelSaveFrame = useCallback(() => {
     setShowSaveFrameModal(false);
