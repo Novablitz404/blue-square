@@ -3,7 +3,6 @@
 import {
   useMiniKit,
   useAddFrame,
-  useNotification,
 } from "@coinbase/onchainkit/minikit";
 import {
   Name,
@@ -39,44 +38,64 @@ export default function App() {
 
   const addFrame = useAddFrame();
 
-  const sendNotification = useNotification();
-
   // Function to send notifications for new quests and rewards
   const sendNewQuestNotification = useCallback(async (questTitle: string) => {
-    if (!context?.client.added) {
-      console.log('❌ [NOTIFICATION] Frame not added, skipping quest notification');
+    if (!context?.client.added || !address) {
+      console.log('❌ [NOTIFICATION] Frame not added or no address, skipping quest notification');
       return;
     }
 
     try {
       console.log('🔔 [NOTIFICATION] Sending new quest notification:', questTitle);
-      await sendNotification({
-        title: 'New Quest Available! 🎯',
-        body: `A new quest "${questTitle}" has been added. Check it out!`
+      const response = await fetch('/api/notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'New Quest Available! 🎯',
+          body: `A new quest "${questTitle}" has been added. Check it out!`,
+          userId: address
+        })
       });
-      console.log('✅ [NOTIFICATION] New quest notification sent successfully');
+      
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ [NOTIFICATION] New quest notification sent successfully');
+      } else {
+        console.log('⚠️ [NOTIFICATION] Quest notification skipped:', result.message);
+      }
     } catch (error) {
       console.error('❌ [NOTIFICATION] Failed to send new quest notification:', error);
     }
-  }, [sendNotification, context?.client.added]);
+  }, [context?.client.added, address]);
 
   const sendNewRewardNotification = useCallback(async (rewardName: string) => {
-    if (!context?.client.added) {
-      console.log('❌ [NOTIFICATION] Frame not added, skipping reward notification');
+    if (!context?.client.added || !address) {
+      console.log('❌ [NOTIFICATION] Frame not added or no address, skipping reward notification');
       return;
     }
 
     try {
       console.log('🔔 [NOTIFICATION] Sending new reward notification:', rewardName);
-      await sendNotification({
-        title: 'New Reward Available! 🎁',
-        body: `A new reward "${rewardName}" has been added. Claim it now!`
+      const response = await fetch('/api/notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'New Reward Available! 🎁',
+          body: `A new reward "${rewardName}" has been added. Claim it now!`,
+          userId: address
+        })
       });
-      console.log('✅ [NOTIFICATION] New reward notification sent successfully');
+      
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ [NOTIFICATION] New reward notification sent successfully');
+      } else {
+        console.log('⚠️ [NOTIFICATION] Reward notification skipped:', result.message);
+      }
     } catch (error) {
       console.error('❌ [NOTIFICATION] Failed to send new reward notification:', error);
     }
-  }, [sendNotification, context?.client.added]);
+  }, [context?.client.added, address]);
 
   // Check for new quests and rewards periodically
   useEffect(() => {
@@ -177,15 +196,33 @@ export default function App() {
   const handleAddFrame = useCallback(async () => {
     setIsSavingFrame(true);
     try {
-      const frameAdded = await addFrame();
-      setFrameAdded(Boolean(frameAdded));
-      setShowSaveFrameModal(false);
+      const frameResult = await addFrame();
+      if (frameResult && address) {
+        // Store notification details in Redis
+        try {
+          await fetch('/api/notification', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: address,
+              token: frameResult.token,
+              url: frameResult.url
+            })
+          });
+          console.log('✅ [NOTIFICATION] Stored notification details for user:', address);
+        } catch (error) {
+          console.error('❌ [NOTIFICATION] Failed to store notification details:', error);
+        }
+        
+        setFrameAdded(true);
+        setShowSaveFrameModal(false);
+      }
     } catch (error) {
       console.error('Error saving frame:', error);
     } finally {
       setIsSavingFrame(false);
     }
-  }, [addFrame]);
+  }, [addFrame, address]);
 
   const handleCancelSaveFrame = useCallback(() => {
     setShowSaveFrameModal(false);
@@ -194,41 +231,36 @@ export default function App() {
   const handleSendNotification = async () => {
     try {
       // Check if the frame is added and user has notification permissions
-      if (!context?.client.added) {
-        console.error('❌ [NOTIFICATION] Frame not added yet');
+      if (!context?.client.added || !address) {
+        console.error('❌ [NOTIFICATION] Frame not added or no address');
         alert('Please add the frame to your mini apps first to enable notifications');
         return;
       }
 
       console.log('🔔 [NOTIFICATION] Attempting to send notification');
-      console.log('🔔 [NOTIFICATION] Context details:', {
-        clientAdded: context.client.added,
-        hasContext: !!context
+      
+      const response = await fetch('/api/notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Test Notification! 🎉',
+          body: 'This is a test notification from Base Quest!',
+          userId: address
+        })
       });
       
-      const result = await sendNotification({
-        title: 'New On-chain Points! 🎉',
-        body: 'You earned points for your recent on-chain activity!'
-      });
-      
-      console.log('✅ [NOTIFICATION] Notification sent successfully:', result);
-      setNotificationSent(true);
-      setTimeout(() => setNotificationSent(false), 30000);
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ [NOTIFICATION] Notification sent successfully:', result);
+        setNotificationSent(true);
+        setTimeout(() => setNotificationSent(false), 30000);
+      } else {
+        console.log('⚠️ [NOTIFICATION] Notification skipped:', result.message);
+        alert(result.message || 'Failed to send notification');
+      }
     } catch (error) {
       console.error('❌ [NOTIFICATION] Failed to send notification:', error);
-      
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('notifications')) {
-          alert('Notifications are not enabled. Please enable notifications for this mini app.');
-        } else if (error.message.includes('frame')) {
-          alert('Frame not found. Please add the frame to your mini apps first.');
-        } else {
-          alert(`Failed to send notification: ${error.message}`);
-        }
-      } else {
-        alert('Failed to send notification. Please try again.');
-      }
+      alert('Failed to send notification. Please try again.');
     }
   };
 
