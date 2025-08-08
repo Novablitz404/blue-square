@@ -144,7 +144,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
   });
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col">
       {/* Navigation Bar - Moved to top */}
       <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
         <div className="flex items-center justify-around py-3 px-4">
@@ -194,8 +194,8 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
         </div>
       </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
+      {/* Content area - no scrolling */}
+      <div className="space-y-4 px-4">
         {/* Header */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -240,158 +240,158 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
 
         {/* Quests List */}
         <div className="space-y-3">
-          {!address ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium mb-2">Connect Wallet</p>
-              <p className="text-sm">Connect your wallet to view your quests</p>
-            </div>
-          ) : isLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="h-5 bg-gray-300 rounded w-3/4 mb-2"></div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-16 h-4 bg-gray-300 rounded"></div>
-                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                        <div className="w-20 h-4 bg-gray-300 rounded"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-right">
-                        <div className="w-12 h-5 bg-gray-300 rounded"></div>
-                        <div className="w-8 h-3 bg-gray-300 rounded mt-1"></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="h-3 bg-gray-300 rounded w-full mb-3"></div>
-                  
-                  {/* Progress Bar */}
-                  <div className="mb-3">
-                    <div className="flex justify-between mb-1">
-                      <div className="w-16 h-3 bg-gray-300 rounded"></div>
-                      <div className="w-8 h-3 bg-gray-300 rounded"></div>
-                    </div>
-                    <div className="w-full bg-gray-300 rounded-full h-2">
-                      <div className="h-2 rounded-full bg-gray-400 w-1/3"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="w-20 h-4 bg-gray-300 rounded"></div>
-                    <div className="w-16 h-4 bg-gray-300 rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : quests.length === 0 ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium mb-2">No quests available</p>
-              <p className="text-sm">Check back later for new quests!</p>
-            </div>
-          ) : filteredQuests.length === 0 ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium mb-2">
-                {questSubTab === 'completed' ? 'No completed quests' : 'No available quests'}
-              </p>
-              <p className="text-sm">
-                {questSubTab === 'completed' 
-                  ? 'Complete some quests to see them here!' 
-                  : 'All quests have been completed!'
-                }
-              </p>
-            </div>
-          ) : (
-            filteredQuests.map(({ quest, userQuest }) => {
-              const status = getQuestStatus(userQuest, quest);
-              const progress = getProgressPercentage(userQuest, quest);
-              
-              return (
-                <div
-                  key={`${quest.id}-${userQuest.userId}`}
-                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-[var(--app-foreground)] mb-1">
-                        {quest.title}
-                      </h3>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-xs font-medium ${status.color}`}>
-                          {status.text}
-                        </span>
-                        {quest.rewards.title && (
-                          <>
-                            <span className="text-xs text-[var(--app-foreground-muted)]">•</span>
-                            <span className="text-xs text-[var(--app-foreground-muted)]">
-                              {quest.rewards.title}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-[var(--app-accent)]">
-                          +{quest.rewards.points}
+          {/* Scrollable Quests List */}
+          <div className="h-64 overflow-y-auto space-y-3 pr-2">
+            {!address ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium mb-2">Connect Wallet</p>
+                <p className="text-sm">Connect your wallet to view your quests</p>
+              </div>
+            ) : isLoading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="h-5 bg-gray-300 rounded w-3/4 mb-2"></div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                          <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                          <div className="w-20 h-4 bg-gray-300 rounded"></div>
                         </div>
-                        <div className="text-xs text-[var(--app-foreground-muted)]">points</div>
                       </div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-xs text-[var(--app-foreground-muted)] mb-3">
-                    {quest.description}
-                  </p>
-                  
-                  {/* Progress Bar */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs text-[var(--app-foreground-muted)] mb-1">
-                      <span>Progress</span>
-                      <span>{Math.round(progress)}%</span>
-                    </div>
-                    <div className="w-full bg-[var(--app-card-border)] rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          userQuest.isCompleted 
-                            ? 'bg-green-500' 
-                            : progress > 0 
-                              ? 'bg-blue-500' 
-                              : 'bg-gray-300'
-                        }`}
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  {/* Rewards */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-semibold text-[var(--app-accent)]">
-                        +{quest.rewards.points} points
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <div className="text-right">
+                          <div className="w-12 h-5 bg-gray-300 rounded"></div>
+                          <div className="w-8 h-3 bg-gray-300 rounded mt-1"></div>
+                        </div>
+                      </div>
                     </div>
                     
-                    {userQuest.isCompleted && (
-                      <div className="flex items-center space-x-1 text-green-500">
-                        <Icon name="check" size="sm" />
-                        <span className="text-xs font-medium">Completed</span>
+                    <div className="h-3 bg-gray-300 rounded w-full mb-3"></div>
+                    
+                    {/* Progress Bar */}
+                    <div className="mb-3">
+                      <div className="flex justify-between mb-1">
+                        <div className="w-16 h-3 bg-gray-300 rounded"></div>
+                        <div className="w-8 h-3 bg-gray-300 rounded"></div>
                       </div>
-                    )}
+                      <div className="w-full bg-gray-300 rounded-full h-2">
+                        <div className="h-2 rounded-full bg-gray-400 w-1/3"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="w-20 h-4 bg-gray-300 rounded"></div>
+                      <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                ))}
+              </div>
+            ) : quests.length === 0 ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium mb-2">No quests available</p>
+                <p className="text-sm">Check back later for new quests!</p>
+              </div>
+            ) : filteredQuests.length === 0 ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium mb-2">
+                  {questSubTab === 'completed' ? 'No completed quests' : 'No available quests'}
+                </p>
+                <p className="text-sm">
+                  {questSubTab === 'completed' 
+                    ? 'Complete some quests to see them here!' 
+                    : 'All quests have been completed!'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredQuests.slice(0, 6).map(({ quest, userQuest }) => {
+                  const status = getQuestStatus(userQuest, quest);
+                  const progress = getProgressPercentage(userQuest, quest);
+                  
+                  return (
+                    <div
+                      key={`${quest.id}-${userQuest.userId}`}
+                      className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] hover:shadow-md transition-shadow ${
+                        userQuest.isCompleted ? "ring-2 ring-green-500/20" : ""
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="text-sm font-semibold text-[var(--app-foreground)]">
+                              {quest.title}
+                            </h4>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              quest.type === 'early_adopter' 
+                                ? 'bg-blue-100 text-blue-700' 
+                                : quest.type === 'activity_based'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              {quest.type.replace('_', ' ')}
+                            </span>
+                            {userQuest.isCompleted && (
+                              <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                                Completed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--app-foreground-muted)] mb-2">
+                            {quest.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-right">
+                            <div className="text-sm font-bold text-[var(--app-accent)]">
+                              +{quest.rewards.points}
+                            </div>
+                            <div className="text-xs text-[var(--app-foreground-muted)]">
+                              points
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-xs text-[var(--app-foreground-muted)]">Progress</span>
+                          <span className="text-xs text-[var(--app-foreground-muted)]">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full bg-[var(--app-accent)] transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-[var(--app-foreground-muted)]">
+                          {status.text}
+                        </div>
+                        <div className="text-xs text-[var(--app-foreground-muted)]">
+                          {userQuest.isCompleted 
+                            ? `Completed ${userQuest.completedAt ? new Date(userQuest.completedAt).toLocaleDateString() : ''}`
+                            : `Started ${new Date(userQuest.startedAt).toLocaleDateString()}`
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

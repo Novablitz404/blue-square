@@ -14,7 +14,6 @@ interface RewardsProps {
 export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) {
   const [rewards, setRewards] = useState<AvailableReward[]>([]);
   const [loading, setLoading] = useState(true);
-  const [redeeming, setRedeeming] = useState<string | null>(null);
   const [rewardSubTab, setRewardSubTab] = useState<'unclaimed' | 'claimed'>('unclaimed');
 
   const loadRewards = useCallback(async () => {
@@ -48,7 +47,6 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
       return;
     }
 
-    setRedeeming(reward.id);
     try {
       await recordUserReward(userAddress, reward);
       alert(`Successfully redeemed ${reward.name}!`);
@@ -58,8 +56,6 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
     } catch (error) {
       console.error('Error redeeming reward:', error);
       alert("Failed to redeem reward. Please try again.");
-    } finally {
-      setRedeeming(null);
     }
   };
 
@@ -107,7 +103,7 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
   });
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col">
       {/* Navigation Bar - Moved to top */}
       <div className="bg-[var(--app-card-bg)] backdrop-blur-md z-10">
         <div className="flex items-center justify-around py-3 px-4">
@@ -157,8 +153,8 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
         </div>
       </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 pb-4 overflow-y-auto px-4">
+      {/* Content area - no scrolling */}
+      <div className="space-y-4 px-4">
         {/* Header with User Points */}
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
           <div className="flex items-center justify-between mb-3">
@@ -194,143 +190,159 @@ export function Rewards({ activeTab, setActiveTab, userAddress }: RewardsProps) 
             {rewardSubTab === 'claimed' ? 'Claimed Rewards' : 'Available Rewards'}
           </h3>
           
-          {!userAddress ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium mb-2">Connect Wallet</p>
-              <p className="text-sm">Connect your wallet to view your rewards</p>
-            </div>
-          ) : loading ? (
-            <div className="grid gap-3">
-              {[...Array(4)].map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <div className="mt-0.5">
-                        <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <div className="h-4 bg-gray-300 rounded w-32"></div>
-                          <div className="w-16 h-4 bg-gray-300 rounded"></div>
+          {/* Scrollable Rewards List */}
+          <div className="h-64 overflow-y-auto space-y-3 pr-2">
+            {!userAddress ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <Icon name="wallet" size="lg" className="mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium mb-2">Connect Wallet</p>
+                <p className="text-sm">Connect your wallet to view your rewards</p>
+              </div>
+            ) : loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border border-[var(--app-card-border)] animate-pulse"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="mt-0.5">
+                          <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
                         </div>
-                        <div className="h-3 bg-gray-300 rounded w-full mb-2"></div>
-                        
-                        {/* Requirements */}
-                        <div className="space-y-1">
-                          <div className="h-3 bg-gray-300 rounded w-24"></div>
-                          <div className="h-3 bg-gray-300 rounded w-28"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-end space-y-2">
-                      <div className="w-16 h-6 bg-gray-300 rounded"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : rewards.length === 0 ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <p className="text-lg font-medium mb-2">No rewards available</p>
-              <p className="text-sm">Check back later for new rewards!</p>
-            </div>
-          ) : filteredRewards.length === 0 ? (
-            <div className="text-center py-8 text-[var(--app-foreground-muted)]">
-              <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium mb-2">
-                {rewardSubTab === 'claimed' ? 'No claimed rewards' : 'No unclaimed rewards'}
-              </p>
-              <p className="text-sm">
-                {rewardSubTab === 'claimed' 
-                  ? 'Claim some rewards to see them here!' 
-                  : 'All rewards have been claimed!'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {filteredRewards.map((reward) => (
-                <div
-                  key={reward.id}
-                  className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border ${getRewardColor(reward.type)} hover:shadow-md transition-shadow ${
-                    !reward.isEligible || reward.isRedeemed ? "opacity-50" : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <div className="mt-0.5">
-                        {getRewardIcon(reward.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="text-sm font-semibold text-[var(--app-foreground)]">
-                            {reward.name}
-                          </h4>
-                          {reward.isRedeemed && (
-                            <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">
-                              Redeemed
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-[var(--app-foreground-muted)] mb-2">
-                          {reward.description}
-                        </p>
-                        
-                        {/* Requirements */}
-                        <div className="space-y-1">
-                          {reward.requirements.questIds.length > 0 && (
-                            <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
-                              <span className="font-medium">Required Quests:</span> {reward.requirements.questIds.length}
-                            </div>
-                          )}
-                          {reward.requirements.requiredLevel > 0 && (
-                            <div className="mt-1 text-xs text-[var(--app-foreground-muted)]">
-                              <span className="font-medium">Required Level:</span> {reward.requirements.requiredLevel}
-                            </div>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <div className="h-4 bg-gray-300 rounded w-32"></div>
+                            <div className="w-16 h-4 bg-gray-300 rounded"></div>
+                          </div>
+                          <div className="h-3 bg-gray-300 rounded w-full mb-2"></div>
                           
-                          {/* Missing Requirements */}
-                          {reward.missingRequirements.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {reward.missingRequirements.map((req, index) => (
-                                <div key={index} className="text-xs text-red-500">
-                                  • {req}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          {/* Requirements */}
+                          <div className="space-y-1">
+                            <div className="h-3 bg-gray-300 rounded w-24"></div>
+                            <div className="h-3 bg-gray-300 rounded w-28"></div>
+                            <div className="h-3 bg-gray-300 rounded w-20"></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-end space-y-2">
-                      {reward.isEligible && !reward.isRedeemed && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleRedeem(reward)}
-                          disabled={redeeming === reward.id}
-                        >
-                          {redeeming === reward.id ? "Redeeming..." : "Redeem"}
-                        </Button>
-                      )}
-                      {!reward.isEligible && !reward.isRedeemed && (
-                        <div className="text-xs text-red-500 font-medium text-right">
-                          Requirements not met
-                        </div>
-                      )}
+                      
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="w-16 h-6 bg-gray-300 rounded"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            ) : rewards.length === 0 ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <p className="text-lg font-medium mb-2">No rewards available</p>
+                <p className="text-sm">Check back later for new rewards!</p>
+              </div>
+            ) : filteredRewards.length === 0 ? (
+              <div className="text-center py-8 text-[var(--app-foreground-muted)]">
+                <Icon name="trophy" size="lg" className="mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium mb-2">
+                  {rewardSubTab === 'claimed' ? 'No claimed rewards' : 'No unclaimed rewards'}
+                </p>
+                <p className="text-sm">
+                  {rewardSubTab === 'claimed' 
+                    ? 'Claim some rewards to see them here!' 
+                    : 'All rewards have been claimed!'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredRewards.slice(0, 6).map((reward) => (
+                  <div
+                    key={reward.id}
+                    className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-lg p-4 border ${getRewardColor(reward.type)} hover:shadow-md transition-shadow ${
+                      !reward.isEligible || reward.isRedeemed ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="mt-0.5">
+                          {getRewardIcon(reward.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="text-sm font-semibold text-[var(--app-foreground)]">
+                              {reward.name}
+                            </h4>
+                            {reward.isRedeemed && (
+                              <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">
+                                Redeemed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--app-foreground-muted)] mb-2">
+                            {reward.description}
+                          </p>
+                          
+                          {/* Requirements */}
+                          <div className="space-y-1">
+                            {reward.requirements.requiredLevel > 0 && (
+                              <div className="flex items-center space-x-2 text-xs text-[var(--app-foreground-muted)]">
+                                <Icon name="points" size="sm" />
+                                <span>Level {reward.requirements.requiredLevel}+ required</span>
+                              </div>
+                            )}
+                            {reward.requirements.questIds.length > 0 && (
+                              <div className="flex items-center space-x-2 text-xs text-[var(--app-foreground-muted)]">
+                                <Icon name="activity" size="sm" />
+                                <span>{reward.requirements.questIds.length} quest(s) required</span>
+                              </div>
+                            )}
+                            {reward.maxRedemptions && (
+                              <div className="flex items-center space-x-2 text-xs text-[var(--app-foreground-muted)]">
+                                <Icon name="check" size="sm" />
+                                <span>{reward.currentRedemptions}/{reward.maxRedemptions} claimed</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-[var(--app-accent)]">
+                            +{reward.pointsReward}
+                          </div>
+                          <div className="text-xs text-[var(--app-foreground-muted)]">
+                            points
+                          </div>
+                        </div>
+                        
+                        {!reward.isRedeemed && reward.isEligible && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleRedeem(reward)}
+                            disabled={loading}
+                          >
+                            {loading ? "Claiming..." : "Claim"}
+                          </Button>
+                        )}
+                        
+                        {reward.isRedeemed && (
+                          <span className="text-xs text-red-500 font-medium">
+                            Already claimed
+                          </span>
+                        )}
+                        
+                        {!reward.isEligible && !reward.isRedeemed && (
+                          <span className="text-xs text-[var(--app-foreground-muted)]">
+                            Not eligible
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

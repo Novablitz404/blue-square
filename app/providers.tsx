@@ -9,7 +9,6 @@ export function Providers(props: { children: ReactNode }) {
     <MiniKitProvider
       projectId={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
       chain={base}
-      notificationProxyUrl="/api/notification"
     >
       {props.children}
     </MiniKitProvider>

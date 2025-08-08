@@ -4,7 +4,6 @@ import { getAvailableQuests, getUserQuestData, updateDailyLoginStreak, completeE
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
-  const checkNew = searchParams.get('checkNew') === 'true';
 
   if (!userId) {
     return NextResponse.json({ error: 'User ID parameter is required' }, { status: 400 });
@@ -21,30 +20,12 @@ export async function GET(request: NextRequest) {
     console.log('Available quests from Firebase:', quests.map(q => ({ id: q.quest.id, title: q.quest.title, type: q.quest.type })));
     console.log('User quest data:', userQuestData);
     
-    // If checking for new content, filter for quests created in the last 24 hours
-    let newQuests: Array<{id: string; title: string; description: string; type: string}> = [];
-    if (checkNew) {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      newQuests = quests.filter(q => {
-        const questCreatedAt = q.quest.createdAt instanceof Date 
-          ? q.quest.createdAt 
-          : new Date(q.quest.createdAt);
-        return questCreatedAt > twentyFourHoursAgo && !q.userQuest?.startedAt;
-      }).map(q => ({
-        id: q.quest.id,
-        title: q.quest.title,
-        description: q.quest.description,
-        type: q.quest.type
-      }));
-    }
-    
     return NextResponse.json({
       success: true,
       data: {
         quests,
         userQuestData
-      },
-      ...(checkNew && { newQuests })
+      }
     });
   } catch (error) {
     console.error('Error fetching quests:', error);

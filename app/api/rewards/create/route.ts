@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
-import { NotificationService } from '@/lib/notification-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,40 +60,6 @@ export async function POST(request: NextRequest) {
 
     console.log(`Created new reward: ${name} (ID: ${rewardRef.id})`);
 
-    // Send notifications to all users who have added the frame
-    try {
-      const usersWithNotifications = await NotificationService.getAllUsersWithNotifications();
-      let notificationCount = 0;
-      
-      for (const userId of usersWithNotifications) {
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/notification`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: 'New Reward Available! 🎁',
-              body: `A new reward "${name}" has been added. Claim it now!`,
-              userId: userId
-            })
-          });
-          
-          const result = await response.json();
-          if (result.success) {
-            notificationCount++;
-            console.log(`✅ [NOTIFICATION] Reward notification sent to user: ${userId}`);
-          } else {
-            console.log(`⚠️ [NOTIFICATION] Reward notification skipped for user: ${userId} - ${result.message}`);
-          }
-        } catch (error) {
-          console.error(`❌ [NOTIFICATION] Failed to send reward notification to user: ${userId}`, error);
-        }
-      }
-      
-      console.log(`🎁 [REWARD] Sent reward notifications to ${notificationCount}/${usersWithNotifications.length} users`);
-    } catch (error) {
-      console.error('❌ [NOTIFICATION] Failed to send reward notifications:', error);
-    }
-
     return NextResponse.json({
       success: true,
       message: 'Reward created successfully',
@@ -108,7 +73,6 @@ export async function POST(request: NextRequest) {
         createdAt: rewardData.createdAt.toDate()
       }
     });
-
   } catch (error) {
     console.error('Error creating reward:', error);
     return NextResponse.json(
