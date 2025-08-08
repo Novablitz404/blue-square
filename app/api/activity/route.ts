@@ -333,9 +333,40 @@ export async function GET(request: NextRequest) {
           isInitialScanComplete: true,
         };
       } else {
-        // Update last scanned block even if no new activities
-        if (scanResult.lastScannedBlock) {
-          await updateLastScannedBlock(address, scanResult.lastScannedBlock);
+        // No new activities found, but we may need to create user data if it doesn't exist
+        if (!userData) {
+          // This is a new user with no activities, create minimal user data
+          const questData = await getUserQuestData(address);
+          const questPoints = questData?.totalQuestPoints || 0;
+          
+          console.log(`Creating initial user data for ${address} with ${questPoints} quest points and no activities`);
+          
+          await saveUserActivity(address, {
+            address,
+            activities: [],
+            totalPoints: 0,
+            combinedPoints: questPoints,
+            level: getLevelFromPoints(questPoints),
+            lastUpdated: new Date(),
+            lastScannedBlock: scanResult.lastScannedBlock,
+            isInitialScanComplete: true,
+          });
+
+          userData = {
+            address,
+            activities: [],
+            totalPoints: 0,
+            combinedPoints: questPoints,
+            level: getLevelFromPoints(questPoints),
+            lastUpdated: new Date(),
+            lastScannedBlock: scanResult.lastScannedBlock,
+            isInitialScanComplete: true,
+          };
+        } else {
+          // Update last scanned block even if no new activities
+          if (scanResult.lastScannedBlock) {
+            await updateLastScannedBlock(address, scanResult.lastScannedBlock);
+          }
         }
       }
     }
