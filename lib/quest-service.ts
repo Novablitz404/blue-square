@@ -403,7 +403,7 @@ export async function syncMissingQuests(userId: string): Promise<void> {
     
     // Convert to Firebase format to ensure no undefined values
     const firebaseQuests = updatedQuests.map(quest => {
-      const firebaseQuest: any = {
+      const firebaseQuest: Record<string, unknown> = {
         userId: quest.userId,
         questId: quest.questId,
         progress: quest.progress || 0,
@@ -576,10 +576,6 @@ export async function completeShareQuest(userId: string, questId: string): Promi
       const todayShareCount = todayShares?.count || 0;
       
       if (todayShareCount >= dailyLimit) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const timeUntilTomorrow = tomorrow.toDateString();
-        
         return { 
           success: false, 
           message: `Daily limit reached (${todayShareCount}/${dailyLimit}). Come back tomorrow!`,

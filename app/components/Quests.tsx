@@ -180,18 +180,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
     }
   };
 
-  const getQuestStatus = (userQuest: UserQuest, quest: Quest) => {
-    if (userQuest.isCompleted) {
-      return { status: 'completed', text: 'Quest Finished', color: 'text-green-500' };
-    }
-    
-    const progress = getProgressPercentage(userQuest, quest);
-    if (progress > 0) {
-      return { status: 'in-progress', text: 'In Progress', color: 'text-blue-500' };
-    }
-    
-    return { status: 'not-started', text: 'Not Started', color: 'text-gray-500' };
-  };
+
 
   // Filter quests based on sub-tab
   const filteredQuests = quests.filter(({ userQuest }) => {
@@ -373,7 +362,6 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
             ) : (
               <div className="space-y-3">
                 {filteredQuests.map(({ quest, userQuest }) => {
-                  const status = getQuestStatus(userQuest, quest);
                   const progress = getProgressPercentage(userQuest, quest);
                   
                   return (
@@ -455,7 +443,6 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
                             
                             {/* Share button on the right */}
                             <ShareButton
-                              questId={quest.id}
                               shareContent={quest.requirements.shareContent || `Check out Blue Square! I'm tracking my on-chain activity and earning points. Join me on Base! 🚀`}
                               onShareComplete={() => handleShareComplete(quest.id)}
                               disabled={!shareStatus.canShare}
