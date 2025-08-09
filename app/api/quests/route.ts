@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailableQuests, getUserQuestData, updateDailyLoginStreak, completeEarlyAdopterQuest } from '../../../lib/quest-service';
+import { getAvailableQuests, getUserQuestData, updateDailyLoginStreak, completeEarlyAdopterQuest, completeShareQuest } from '../../../lib/quest-service';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,12 +13,13 @@ export async function GET(request: NextRequest) {
     // Update daily login streak when user accesses quests
     await updateDailyLoginStreak(userId);
     
-    // Get available quests and user quest data
+    // Get available quests and user quest data (includes auto-migration)
+    console.log('🔍 [API] Fetching quests for user:', userId);
     const quests = await getAvailableQuests(userId);
     const userQuestData = await getUserQuestData(userId);
     
-    console.log('Available quests from Firebase:', quests.map(q => ({ id: q.quest.id, title: q.quest.title, type: q.quest.type })));
-    console.log('User quest data:', userQuestData);
+    console.log('✅ [API] Available quests from Firebase:', quests.map(q => ({ id: q.quest.id, title: q.quest.title, type: q.quest.type })));
+    console.log('📊 [API] User quest data:', userQuestData);
     
     return NextResponse.json({
       success: true,
@@ -56,6 +57,15 @@ export async function POST(request: NextRequest) {
         await completeEarlyAdopterQuest(userId);
         console.log('✅ [API] Early adopter quest check completed for:', userId);
         return NextResponse.json({ success: true, message: 'Early adopter quest checked' });
+      
+      case 'complete_share':
+        console.log('📤 [API] Completing share quest for:', userId, 'Quest:', questId);
+        if (!questId) {
+          return NextResponse.json({ error: 'Quest ID is required for share completion' }, { status: 400 });
+        }
+        const shareResult = await completeShareQuest(userId, questId);
+        console.log('✅ [API] Share quest completion result:', shareResult);
+        return NextResponse.json(shareResult);
       
       default:
         console.log('❌ [API] Invalid action:', action);

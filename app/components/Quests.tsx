@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
+import { ShareButton } from "./ShareButton";
 
 interface QuestProps {
   activeTab: string;
@@ -14,12 +15,15 @@ interface Quest {
   id: string;
   title: string;
   description: string;
-  type: 'early_adopter' | 'activity_based' | 'streak_based';
+  type: 'early_adopter' | 'activity_based' | 'streak_based' | 'share_based';
   requirements: {
     dailyLogins?: number;
     targetDate?: string;
     activityCount?: number;
     streakDays?: number;
+    shareCount?: number;
+    shareContent?: string;
+    dailyShareLimit?: number;
   };
   rewards: {
     points: number;
@@ -40,6 +44,10 @@ interface UserQuest {
   completedAt?: Date;
   startedAt: Date;
   lastUpdated: Date;
+  dailyShares?: {
+    date: string; // YYYY-MM-DD format
+    count: number;
+  }[];
 }
 
 export function Quests({ activeTab, setActiveTab }: QuestProps) {
@@ -106,6 +114,55 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
     };
   }, [loadQuests]);
 
+  // Helper function to check if user can share today
+  const canShareToday = (userQuest: UserQuest, quest: Quest) => {
+    const dailyLimit = quest.requirements.dailyShareLimit || 0;
+    
+    if (dailyLimit <= 0) {
+      return { canShare: true, sharesUsedToday: 0, dailyLimit: 0 }; // No limit
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayShares = userQuest.dailyShares?.find(ds => ds.date === today);
+    const sharesUsedToday = todayShares?.count || 0;
+    
+    return {
+      canShare: sharesUsedToday < dailyLimit,
+      sharesUsedToday,
+      dailyLimit
+    };
+  };
+
+  const handleShareComplete = async (questId: string) => {
+    if (!address) return;
+    
+    try {
+      const response = await fetch('/api/quests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: address,
+          action: 'complete_share',
+          questId: questId
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Share quest completed:', result.message);
+        // Refresh quests to show updated progress
+        loadQuests();
+        // Also refresh activity data if quest was completed
+        window.dispatchEvent(new CustomEvent('refreshActivity'));
+      } else {
+        console.error('❌ Failed to complete share quest:', result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error completing share quest:', error);
+    }
+  };
+
   const getProgressPercentage = (userQuest: UserQuest, quest: Quest) => {
     if (userQuest.isCompleted) return 100;
     
@@ -114,6 +171,8 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
         return Math.min((userQuest.progress / (quest.requirements.streakDays || 1)) * 100, 100);
       case 'activity_based':
         return Math.min((userQuest.progress / (quest.requirements.activityCount || 1)) * 100, 100);
+      case 'share_based':
+        return Math.min((userQuest.progress / (quest.requirements.shareCount || 1)) * 100, 100);
       case 'early_adopter':
         return userQuest.progress * 100;
       default:
@@ -123,7 +182,7 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
 
   const getQuestStatus = (userQuest: UserQuest, quest: Quest) => {
     if (userQuest.isCompleted) {
-      return { status: 'completed', text: 'Completed', color: 'text-green-500' };
+      return { status: 'completed', text: 'Quest Finished', color: 'text-green-500' };
     }
     
     const progress = getProgressPercentage(userQuest, quest);
@@ -330,18 +389,14 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
                             <h4 className="text-sm font-semibold text-[var(--app-foreground)]">
                               {quest.title}
                             </h4>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              quest.type === 'early_adopter' 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : quest.type === 'activity_based'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-purple-100 text-purple-700'
-                            }`}>
-                              {quest.type.replace('_', ' ')}
-                            </span>
                             {userQuest.isCompleted && (
                               <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
                                 Completed
+                              </span>
+                            )}
+                            {!userQuest.isCompleted && userQuest.progress > 0 && (
+                              <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                In Progress
                               </span>
                             )}
                           </div>
@@ -365,7 +420,13 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
                       <div className="mb-3">
                         <div className="flex justify-between mb-1">
                           <span className="text-xs text-[var(--app-foreground-muted)]">Progress</span>
-                          <span className="text-xs text-[var(--app-foreground-muted)]">{progress}%</span>
+                          <span className="text-xs text-[var(--app-foreground-muted)]">
+                            {quest.type === 'share_based' ? (
+                              `${userQuest.progress}/${quest.requirements.shareCount || 1} shares (${progress}%)`
+                            ) : (
+                              `${progress}%`
+                            )}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
@@ -375,17 +436,34 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-[var(--app-foreground-muted)]">
-                          {status.text}
-                        </div>
-                        <div className="text-xs text-[var(--app-foreground-muted)]">
-                          {userQuest.isCompleted 
-                            ? `Completed ${userQuest.completedAt ? new Date(userQuest.completedAt).toLocaleDateString() : ''}`
-                            : `Started ${new Date(userQuest.startedAt).toLocaleDateString()}`
-                          }
-                        </div>
-                      </div>
+                      {/* Share Button and Daily Limit for share-based quests */}
+                      {quest.type === 'share_based' && !userQuest.isCompleted && (() => {
+                        const shareStatus = canShareToday(userQuest, quest);
+                        return (
+                          <div className="flex justify-between items-center mt-3">
+                            {/* Daily limit info on the left */}
+                            <div className="text-xs text-[var(--app-foreground-muted)]">
+                              {shareStatus.dailyLimit > 0 && (
+                                <>
+                                  {shareStatus.sharesUsedToday}/{shareStatus.dailyLimit} today
+                                  {!shareStatus.canShare && (
+                                    <div className="text-orange-500">Come back tomorrow!</div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            
+                            {/* Share button on the right */}
+                            <ShareButton
+                              questId={quest.id}
+                              shareContent={quest.requirements.shareContent || `Check out Blue Square! I'm tracking my on-chain activity and earning points. Join me on Base! 🚀`}
+                              onShareComplete={() => handleShareComplete(quest.id)}
+                              disabled={!shareStatus.canShare}
+                            />
+                          </div>
+                        );
+                      })()}
+                      
                     </div>
                   );
                 })}
