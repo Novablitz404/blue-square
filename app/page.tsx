@@ -2,6 +2,7 @@
 
 import {
   useMiniKit,
+  useAddFrame,
 } from "@coinbase/onchainkit/minikit";
 import {
   Name,
@@ -16,7 +17,7 @@ import {
   WalletDropdown,
   WalletDropdownDisconnect,
 } from "@coinbase/onchainkit/wallet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
 import { ActivityTracker } from "./components/ActivityTracker";
@@ -28,6 +29,9 @@ export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const { address } = useAccount();
   const [activeTab, setActiveTab] = useState("activity");
+  const [frameAdded, setFrameAdded] = useState(false);
+
+  const addFrame = useAddFrame();
 
   useEffect(() => {
     if (!isFrameReady) {
@@ -74,6 +78,38 @@ export default function App() {
     }
   }, [address]);
 
+  // Handle adding the frame
+  const handleAddFrame = useCallback(async () => {
+    const frameAdded = await addFrame();
+    setFrameAdded(Boolean(frameAdded));
+  }, [addFrame]);
+
+  // Add Frame button component
+  const addFrameButton = useMemo(() => {
+    if (context && !context.client.added) {
+      return (
+        <button
+          onClick={handleAddFrame}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1"
+        >
+          <span>+</span>
+          <span>Add Frame</span>
+        </button>
+      );
+    }
+
+    if (frameAdded) {
+      return (
+        <div className="flex items-center space-x-1 text-sm font-medium text-green-600 animate-pulse">
+          <span>✓</span>
+          <span>Added</span>
+        </div>
+      );
+    }
+
+    return null;
+  }, [context, frameAdded, handleAddFrame]);
+
   return (
     <div className="flex flex-col font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
@@ -82,6 +118,7 @@ export default function App() {
             <Image src="/BaseQuestLogo-Blue.png" alt="Base Quest" width={120} height={120} priority />
           </div>
           <div className="flex items-center space-x-2">
+            {addFrameButton}
             <div className="scale-100 origin-right">
               <Wallet className="z-10">
                 <ConnectWallet>
