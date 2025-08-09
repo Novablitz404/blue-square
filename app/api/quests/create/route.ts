@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
-import { sendBroadcastNotification } from '@/lib/notification-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,20 +51,6 @@ export async function POST(request: NextRequest) {
     await setDoc(questRef, questData);
 
     console.log(`Created new quest: ${title} (ID: ${questRef.id})`);
-
-    // Send notification to all users about the new quest
-    if (isActive) {
-      try {
-        const notificationResult = await sendBroadcastNotification({
-          title: "🆕 New Quest Available!",
-          body: `"${title}" - Start completing it now to earn rewards!`,
-        });
-        console.log(`📢 Quest notification sent:`, notificationResult);
-      } catch (notificationError) {
-        console.error('❌ Failed to send quest notification:', notificationError);
-        // Don't fail the quest creation if notification fails
-      }
-    }
 
     return NextResponse.json({
       success: true,

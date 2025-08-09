@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, Timestamp, collection } from 'firebase/firestore';
-import { sendBroadcastNotification } from '@/lib/notification-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,20 +59,6 @@ export async function POST(request: NextRequest) {
     await setDoc(rewardRef, rewardData);
 
     console.log(`Created new reward: ${name} (ID: ${rewardRef.id})`);
-
-    // Send notification to all users about the new reward
-    if (isActive) {
-      try {
-        const notificationResult = await sendBroadcastNotification({
-          title: "🎁 New Reward Available!",
-          body: `"${name}" (${pointsReward} pts) - Check it out in the rewards section!`,
-        });
-        console.log(`📢 Reward notification sent:`, notificationResult);
-      } catch (notificationError) {
-        console.error('❌ Failed to send reward notification:', notificationError);
-        // Don't fail the reward creation if notification fails
-      }
-    }
 
     return NextResponse.json({
       success: true,
