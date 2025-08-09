@@ -166,18 +166,26 @@ export function Quests({ activeTab, setActiveTab }: QuestProps) {
   const getProgressPercentage = (userQuest: UserQuest, quest: Quest) => {
     if (userQuest.isCompleted) return 100;
     
+    let percentage: number;
     switch (quest.type) {
       case 'streak_based':
-        return Math.min((userQuest.progress / (quest.requirements.streakDays || 1)) * 100, 100);
+        percentage = Math.min((userQuest.progress / (quest.requirements.streakDays || 1)) * 100, 100);
+        break;
       case 'activity_based':
-        return Math.min((userQuest.progress / (quest.requirements.activityCount || 1)) * 100, 100);
+        percentage = Math.min((userQuest.progress / (quest.requirements.activityCount || 1)) * 100, 100);
+        break;
       case 'share_based':
-        return Math.min((userQuest.progress / (quest.requirements.shareCount || 1)) * 100, 100);
+        percentage = Math.min((userQuest.progress / (quest.requirements.shareCount || 1)) * 100, 100);
+        break;
       case 'early_adopter':
-        return userQuest.progress * 100;
+        percentage = userQuest.progress * 100;
+        break;
       default:
-        return 0;
+        percentage = 0;
     }
+    
+    // Round to whole number
+    return Math.round(percentage);
   };
 
 

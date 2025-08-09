@@ -241,6 +241,29 @@ export async function getLeaderboard(limitCount: number = 10): Promise<Leaderboa
   }
 }
 
+// Get user statistics
+export async function getUserStats(): Promise<{
+  totalUsers: number;
+}> {
+  try {
+    // Get all users count
+    const usersRef = collection(db, 'users');
+    const usersQuery = query(usersRef);
+    const usersSnapshot = await getDocs(usersQuery);
+    
+    const totalUsers = usersSnapshot.size;
+    
+    return {
+      totalUsers
+    };
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    return {
+      totalUsers: 0
+    };
+  }
+}
+
 // Get combined points (activity + quest) for a user
 export async function getCombinedPoints(address: string): Promise<{ activityPoints: number; questPoints: number; totalPoints: number; level: string }> {
   try {

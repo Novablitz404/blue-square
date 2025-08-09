@@ -14,6 +14,10 @@ interface LeaderboardEntry {
   lastActivity: string;
 }
 
+interface UserStats {
+  totalUsers: number;
+}
+
 interface LeaderboardProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -22,6 +26,7 @@ interface LeaderboardProps {
 export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
   const { address } = useAccount();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const loadLeaderboard = useCallback(async () => {
@@ -31,14 +36,17 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
       const result = await response.json();
       
       if (result.success) {
-        setLeaderboard(result.data);
+        setLeaderboard(result.data.leaderboard);
+        setUserStats(result.data.stats);
       } else {
         console.error("Failed to load leaderboard:", result.error);
         setLeaderboard([]);
+        setUserStats(null);
       }
     } catch (error) {
       console.error("Failed to load leaderboard:", error);
       setLeaderboard([]);
+      setUserStats(null);
     } finally {
       setIsLoading(false);
     }
@@ -154,12 +162,24 @@ export function Leaderboard({ activeTab, setActiveTab }: LeaderboardProps) {
               </Button>
             )}
           </div>
+          
+          {address && userStats ? (
+            <div className="text-center">
+              <div className="text-2xl font-bold text-[var(--app-accent)]">{userStats.totalUsers.toLocaleString()}</div>
+              <div className="text-sm text-[var(--app-foreground-muted)]">Total Users</div>
+            </div>
+          ) : !address ? (
+            <div className="text-center">
+              <div className="text-2xl font-bold text-[var(--app-foreground-muted)]">--</div>
+              <div className="text-sm text-[var(--app-foreground-muted)]">Total Users</div>
+            </div>
+          ) : null}
         </div>
 
         {/* Leaderboard List */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-md font-semibold">Top Performers</h3>
+            <h3 className="text-md font-semibold">Top 50 Performers</h3>
           </div>
 
           {/* Scrollable Leaderboard List */}
